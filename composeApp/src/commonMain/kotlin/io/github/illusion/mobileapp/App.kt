@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import io.github.illusion.mobileapp.ui.screens.Greeting
 import org.jetbrains.compose.resources.painterResource
 
 import mobileapp.composeapp.generated.resources.Res
