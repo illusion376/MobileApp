@@ -11,30 +11,41 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import mobileapp.composeapp.generated.resources.Res
+import mobileapp.composeapp.generated.resources.ic_lock
+import mobileapp.composeapp.generated.resources.ic_user
+import org.jetbrains.compose.resources.painterResource
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(
+    viewModel: LoginViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -46,28 +57,51 @@ fun LoginScreen() {
                     )
                 )
             )
-            .padding(24.dp)
+            .padding(horizontal = 41.dp)
     ) {
-        LoginContent()
+        LoginContent(
+            uiState = uiState,
+            onLoginChange = viewModel::updateLogin,
+            onPasswordChange = viewModel::updatePassword,
+            onRememberMeChange = viewModel::updateRememberMe,
+            onLoginClick = { viewModel.onLoginClick() }
+        )
+
+        // Выплывающее уведомление об ошибке
+        ErrorBanner(
+            errorMessage = uiState.errorMessage,
+            onDismiss = { viewModel.clearError() }
+        )
     }
 }
 
 @Composable
-fun LoginContent() {
+fun LoginContent(
+    uiState: LoginUIState,
+    onLoginChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onRememberMeChange: (Boolean) -> Unit,
+    onLoginClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(bottom = 32.dp),
+            .padding(bottom = 40.dp),
         verticalArrangement = Arrangement.Bottom
     ) {
-
         TopSection()
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(45.dp))
 
-        InputsSection()
+        InputsSection(
+            uiState = uiState,
+            onLoginChange = onLoginChange,
+            onPasswordChange = onPasswordChange,
+            onRememberMeChange = onRememberMeChange,
+            onLoginClick = onLoginClick
+        )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(45.dp))
 
         BottomSection()
     }
@@ -76,14 +110,13 @@ fun LoginContent() {
 @Composable
 fun TopSection() {
     Column {
-
         Text(
             text = "LOGO",
             color = Color(0xFFDBDBDB),
             style = MaterialTheme.typography.headlineLarge
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(5.dp))
 
         Text(
             text = "Движение вперёд с осознанием ответственности перед людьми и природой.",
@@ -94,27 +127,70 @@ fun TopSection() {
 }
 
 @Composable
-fun InputsSection() {
+fun InputsSection(
+    uiState: LoginUIState,
+    onLoginChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onRememberMeChange: (Boolean) -> Unit,
+    onLoginClick: () -> Unit
+) {
     Column {
+        CustomTextField(
+            value = uiState.login,
+            onValueChange = onLoginChange,
+            placeholder = "Логин",
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_user),
+                    contentDescription = "user",
+                    tint = Color(0xFF7D7C69),
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                        .size(24.dp)
+                )
+            }
+        )
 
-        CustomTextField("Логин")
+        Spacer(modifier = Modifier.height(18.dp))
 
-        Spacer(modifier = Modifier.height(12.dp))
+        CustomTextField(
+            value = uiState.password,
+            onValueChange = onPasswordChange,
+            placeholder = "Пароль",
+            isPassword = true,
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_lock),
+                    contentDescription = "lock",
+                    tint = Color(0xFF7D7C69),
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                        .size(24.dp)
+                )
+            }
+        )
 
-        CustomTextField("Пароль")
+        Spacer(modifier = Modifier.height(35.dp))
 
-        Spacer(modifier = Modifier.height(12.dp))
+        BottomRow(
+            isChecked = uiState.isRememberMe,
+            onCheckedChange = onRememberMeChange
+        )
 
-        BottomRow()
+        Spacer(modifier = Modifier.height(5.dp))
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        LoginButton()
+        LoginButton(
+            enabled = uiState.isLoginEnabled,
+            onClick = onLoginClick
+        )
     }
 }
 
 @Composable
-fun BottomRow() {
+fun BottomRow(
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -124,15 +200,15 @@ fun BottomRow() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Checkbox(
-                checked = false,
-                onCheckedChange = {},
+                checked = isChecked,
+                onCheckedChange = onCheckedChange,
                 colors = CheckboxDefaults.colors(
                     checkedColor = Color(0xFFDBDBDB),
                     uncheckedColor = Color(0xFFDBDBDB),
                     checkmarkColor = Color.Black
                 )
             )
-            Spacer(modifier = Modifier.width(4.dp))
+
             Text(
                 "Запомнить меня",
                 color = Color(0xFFDBDBDB),
@@ -143,32 +219,54 @@ fun BottomRow() {
         Text(
             text = "Забыли пароль?",
             color = Color(0xFFC6C247),
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.clickable {
+                // TODO: Обработка восстановления пароля
+            }
         )
     }
 }
 
 @Composable
-fun LoginButton() {
+fun LoginButton(
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    // Анимируем цвета
+    val buttonColor1 by animateColorAsState(
+        targetValue = if (enabled) Color(0xFFE2D566) else Color(0xFF4D4B3D),
+        animationSpec = tween(300),
+        label = "buttonColor1"
+    )
+
+    val buttonColor2 by animateColorAsState(
+        targetValue = if (enabled) Color(0xFFAD9B2A) else Color(0xFF3A382C),
+        animationSpec = tween(300),
+        label = "buttonColor2"
+    )
+
+    val textColor by animateColorAsState(
+        targetValue = if (enabled) Color(0xFFDBDBDB) else Color(0xFF7D7D69),
+        animationSpec = tween(300),
+        label = "textColor"
+    )
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .height(65.dp)
+            .clip(RoundedCornerShape(10.dp))
             .background(
                 brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        Color(0xFFE2D566),
-                        Color(0xFFAD9B2A)
-                    )
+                    colors = listOf(buttonColor1, buttonColor2)
                 )
             )
-            .clickable { },
+            .clickable(enabled = enabled) { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = "ВОЙТИ",
-            color = Color(0xFFDBDBDB),
+            color = textColor,
             style = MaterialTheme.typography.labelLarge
         )
     }
@@ -181,24 +279,33 @@ fun BottomSection() {
         horizontalArrangement = Arrangement.Center
     ) {
         Text(
-            "Don’t have an account?",
+            "Еще нет аккаунта?",
             color = Color(0xFF807F66),
             style = MaterialTheme.typography.bodyMedium
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            "Sign up",
+            "Регистрация",
             color = Color(0xFFC6C247),
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.clickable {
+                // TODO: Переход на экран регистрации
+            }
         )
     }
 }
 
 @Composable
-fun CustomTextField(placeholder: String) {
+fun CustomTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    leadingIcon: @Composable (() -> Unit)? = null,
+    isPassword: Boolean = false
+) {
     TextField(
-        value = "",
-        onValueChange = {},
+        value = value,
+        onValueChange = onValueChange,
         textStyle = MaterialTheme.typography.bodyLarge,
         placeholder = {
             Text(
@@ -207,16 +314,20 @@ fun CustomTextField(placeholder: String) {
                 style = MaterialTheme.typography.bodyLarge
             )
         },
+        leadingIcon = leadingIcon,
         singleLine = true,
+        visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
         colors = TextFieldDefaults.colors(
             focusedContainerColor = Color(0xFF4D4B3D),
             unfocusedContainerColor = Color(0xFF4D4B3D),
             focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
+            unfocusedIndicatorColor = Color.Transparent,
+            focusedTextColor = Color(0xFFDBDBDB),
+            unfocusedTextColor = Color(0xFFDBDBDB)
         ),
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .height(63.dp)
+            .clip(RoundedCornerShape(10.dp))
     )
 }
