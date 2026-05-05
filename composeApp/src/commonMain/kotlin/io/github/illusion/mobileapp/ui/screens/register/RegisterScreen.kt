@@ -1,4 +1,4 @@
-package io.github.illusion.mobileapp.ui.screens.login
+package io.github.illusion.mobileapp.ui.screens.register
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,18 +33,18 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import mobileapp.composeapp.generated.resources.Res
+import mobileapp.composeapp.generated.resources.ic_email
 import mobileapp.composeapp.generated.resources.ic_lock
 import mobileapp.composeapp.generated.resources.ic_user
 import org.jetbrains.compose.resources.painterResource
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.ui.unit.sp
 
 @Composable
-fun LoginScreen(
-    onNavigateToRegister: () -> Unit = {},
-    viewModel: LoginViewModel = viewModel()
+fun RegisterScreen(
+    onBackToLogin: () -> Unit = {},
+    viewModel: RegisterViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -61,31 +61,39 @@ fun LoginScreen(
             )
             .padding(horizontal = 41.dp)
     ) {
-        LoginContent(
+        RegisterContent(
             uiState = uiState,
-            onLoginChange = viewModel::updateLogin,
+            onEmailChange = viewModel::updateEmail,
+            onUsernameChange = viewModel::updateUsername,
             onPasswordChange = viewModel::updatePassword,
-            onRememberMeChange = viewModel::updateRememberMe,
-            onLoginClick = { viewModel.onLoginClick() },
-            onNavigateToRegister = onNavigateToRegister
+            onConfirmPasswordChange = viewModel::updateConfirmPassword,
+            onTermsAcceptedChange = viewModel::updateTermsAccepted,
+            onRegisterClick = {
+                viewModel.onRegisterClick(
+                    onSuccess = onBackToLogin
+                )
+            },
+            onBackToLogin = onBackToLogin
         )
 
-        // Выплывающее уведомление об ошибке
-        ErrorBanner(
+        // Баннер ошибки
+        ErrorBannerRegister(
             errorMessage = uiState.errorMessage,
-            onDismiss = { viewModel.clearError() }
+            onDismiss = viewModel::clearError
         )
     }
 }
 
 @Composable
-fun LoginContent(
-    uiState: LoginUIState,
-    onLoginChange: (String) -> Unit,
+fun RegisterContent(
+    uiState: RegisterUIState,
+    onEmailChange: (String) -> Unit,
+    onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
-    onRememberMeChange: (Boolean) -> Unit,
-    onLoginClick: () -> Unit,
-    onNavigateToRegister: () -> Unit
+    onConfirmPasswordChange: (String) -> Unit,
+    onTermsAcceptedChange: (Boolean) -> Unit,
+    onRegisterClick: () -> Unit,
+    onBackToLogin: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -93,28 +101,31 @@ fun LoginContent(
             .padding(bottom = 40.dp),
         verticalArrangement = Arrangement.Bottom
     ) {
-        TopSection()
+        RegisterTopSection()
 
         Spacer(modifier = Modifier.height(45.dp))
 
-        InputsSection(
+        RegisterInputsSection(
             uiState = uiState,
-            onLoginChange = onLoginChange,
+            onEmailChange = onEmailChange,
+            onUsernameChange = onUsernameChange,
             onPasswordChange = onPasswordChange,
-            onRememberMeChange = onRememberMeChange,
-            onLoginClick = onLoginClick
+            onConfirmPasswordChange = onConfirmPasswordChange,
+            onTermsAcceptedChange = onTermsAcceptedChange
         )
 
-        Spacer(modifier = Modifier.height(45.dp))
+        Spacer(modifier = Modifier.height(5.dp))
 
-        BottomSection(
-            onRegisterClick = onNavigateToRegister  // ← ПЕРЕДАЕМ В BottomSection
+        RegisterBottomSection(
+            isRegisterEnabled = uiState.isRegisterEnabled,
+            onRegisterClick = onRegisterClick,
+            onBackToLogin = onBackToLogin
         )
     }
 }
 
 @Composable
-fun TopSection() {
+fun RegisterTopSection() {
     Column {
         Text(
             text = "LOGO",
@@ -125,26 +136,45 @@ fun TopSection() {
         Spacer(modifier = Modifier.height(5.dp))
 
         Text(
-            text = "Движение вперёд с осознанием ответственности перед людьми и природой.",
+            text = "Заполните поля регистрации",
             color = Color(0xFF999999),
-            style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp)
+            style = MaterialTheme.typography.bodyLarge
         )
     }
 }
 
 @Composable
-fun InputsSection(
-    uiState: LoginUIState,
-    onLoginChange: (String) -> Unit,
+fun RegisterInputsSection(
+    uiState: RegisterUIState,
+    onEmailChange: (String) -> Unit,
+    onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
-    onRememberMeChange: (Boolean) -> Unit,
-    onLoginClick: () -> Unit
+    onConfirmPasswordChange: (String) -> Unit,
+    onTermsAcceptedChange: (Boolean) -> Unit
 ) {
     Column {
-        CustomTextField(
-            value = uiState.login,
-            onValueChange = onLoginChange,
-            placeholder = "Логин",
+        CustomRegisterTextField(
+            value = uiState.email,
+            onValueChange = onEmailChange,
+            placeholder = "Email",
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_email),
+                    contentDescription = "email",
+                    tint = Color(0xFF7D7C69),
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                        .size(24.dp)
+                )
+            }
+        )
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        CustomRegisterTextField(
+            value = uiState.username,
+            onValueChange = onUsernameChange,
+            placeholder = "Имя пользователя",
             leadingIcon = {
                 Icon(
                     painter = painterResource(Res.drawable.ic_user),
@@ -159,7 +189,7 @@ fun InputsSection(
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        CustomTextField(
+        CustomRegisterTextField(
             value = uiState.password,
             onValueChange = onPasswordChange,
             placeholder = "Пароль",
@@ -176,69 +206,100 @@ fun InputsSection(
             }
         )
 
-        Spacer(modifier = Modifier.height(35.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
-        BottomRow(
-            isChecked = uiState.isRememberMe,
-            onCheckedChange = onRememberMeChange
+        CustomRegisterTextField(
+            value = uiState.confirmPassword,
+            onValueChange = onConfirmPasswordChange,
+            placeholder = "Подтвердите пароль",
+            isPassword = true,
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_lock),
+                    contentDescription = "confirm password",
+                    tint = Color(0xFF7D7C69),
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                        .size(24.dp)
+                )
+            }
         )
 
-        Spacer(modifier = Modifier.height(5.dp))
+        Spacer(modifier = Modifier.height(35.dp))
 
-        LoginButton(
-            enabled = uiState.isLoginEnabled,
-            onClick = onLoginClick
+        RegisterTermsRow(
+            isChecked = uiState.isTermsAccepted,
+            onCheckedChange = onTermsAcceptedChange
         )
     }
 }
 
 @Composable
-fun BottomRow(
+fun RegisterTermsRow(
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.clickable { onCheckedChange(!isChecked) }
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Checkbox(
-                checked = isChecked,
-                onCheckedChange = onCheckedChange,
-                colors = CheckboxDefaults.colors(
-                    checkedColor = Color(0xFFDBDBDB),
-                    uncheckedColor = Color(0xFFDBDBDB),
-                    checkmarkColor = Color.Black
-                )
+        Checkbox(
+            checked = isChecked,
+            onCheckedChange = onCheckedChange,
+            colors = CheckboxDefaults.colors(
+                checkedColor = Color(0xFFDBDBDB),
+                uncheckedColor = Color(0xFFDBDBDB),
+                checkmarkColor = Color.Black
             )
-
-            Text(
-                "Запомнить меня",
-                color = Color(0xFFDBDBDB),
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
+        )
 
         Text(
-            text = "Забыли пароль?",
-            color = Color(0xFFC6C247),
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.clickable {
-                // TODO: Обработка восстановления пароля
-            }
+            text = "Я принимаю условия пользовательского соглашения",
+            color = Color(0xFFDBDBDB),
+            style = MaterialTheme.typography.bodyMedium
         )
     }
 }
 
 @Composable
-fun LoginButton(
+fun RegisterBottomSection(
+    isRegisterEnabled: Boolean,
+    onRegisterClick: () -> Unit,
+    onBackToLogin: () -> Unit
+) {
+    Column {
+        RegisterButton(
+            enabled = isRegisterEnabled,
+            onClick = onRegisterClick
+        )
+
+        Spacer(modifier = Modifier.height(45.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                "Уже есть аккаунт?",
+                color = Color(0xFF807F66),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                "Войти",
+                color = Color(0xFFC6C247),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.clickable { onBackToLogin() }
+            )
+        }
+    }
+}
+
+@Composable
+fun RegisterButton(
     enabled: Boolean,
     onClick: () -> Unit
 ) {
-    // Анимируем цвета
     val buttonColor1 by animateColorAsState(
         targetValue = if (enabled) Color(0xFFE2D566) else Color(0xFF4D4B3D),
         animationSpec = tween(300),
@@ -271,7 +332,7 @@ fun LoginButton(
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "ВОЙТИ",
+            text = "СОЗДАТЬ",
             color = textColor,
             style = MaterialTheme.typography.labelLarge
         )
@@ -279,30 +340,7 @@ fun LoginButton(
 }
 
 @Composable
-fun BottomSection(
-    onRegisterClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Text(
-            "Еще нет аккаунта?",
-            color = Color(0xFF807F66),
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            "Регистрация",
-            color = Color(0xFFC6C247),
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.clickable { onRegisterClick() }
-        )
-    }
-}
-
-@Composable
-fun CustomTextField(
+fun CustomRegisterTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
