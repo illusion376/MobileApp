@@ -2,14 +2,14 @@ package io.github.illusion.mobileapp.ui.screens.register
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.illusion.mobileapp.domain.usecase.RegisterUserUseCase
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class RegisterViewModel(private val registerUserUseCase: RegisterUserUseCase) : ViewModel() {
+class RegisterViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUIState())
     val uiState: StateFlow<RegisterUIState> = _uiState.asStateFlow()
@@ -132,7 +132,7 @@ class RegisterViewModel(private val registerUserUseCase: RegisterUserUseCase) : 
         }
     }
 
-    fun onRegisterClick(onSuccess: () -> Unit) {
+    fun onRegisterClick(onSuccess: (String) -> Unit) { // Теперь передаем email
         viewModelScope.launch {
             _uiState.update { state ->
                 state.copy(errorMessage = null)
@@ -155,24 +155,15 @@ class RegisterViewModel(private val registerUserUseCase: RegisterUserUseCase) : 
             }
 
             // Проверка длины пароля
-            if (_uiState.value.password.length < 6) {
+            if (_uiState.value.password.length < 4) {
                 _uiState.update { state ->
-                    state.copy(errorMessage = "Пароль должен быть не менее 6 символов")
+                    state.copy(errorMessage = "Пароль должен быть не менее 4 символов")
                 }
                 return@launch
             }
 
-            val result = registerUserUseCase(_uiState.value.email, _uiState.value.username, _uiState.value.password)
-
-            if (result.isSuccess) {
-                // TODO: Переход на экран подтверждения
-                onSuccess()
-            } else {
-                _uiState.update { state ->
-                    state.copy(
-                        errorMessage = result.getOrNull()?.message
-                    )
-                }
-            }
+            // Успешная регистрация - сразу переходим на логин
+            onSuccess(_uiState.value.email)
         }
+    }
 }

@@ -34,21 +34,37 @@ class VerificationViewModel : ViewModel() {
 
     fun checkVerificationStatus(onVerified: () -> Unit) {
         viewModelScope.launch {
-            // TODO: Заменить на реальный API вызов с периодической проверкой
+            // Имитация проверки статуса подтверждения
+            delay(3000)
 
-            // Временная заглушка (автоматический переход через 5 сек для теста)
-            delay(5000)
-            onVerified()
+            // В реальном проекте здесь был бы запрос к API
+            val isVerified = false // Пока false для демонстрации
+
+            if (isVerified) {
+                _uiState.update { state ->
+                    state.copy(isVerified = true)
+                }
+                onVerified()
+            } else {
+                checkVerificationStatus(onVerified)
+            }
         }
     }
 
     fun resendVerificationEmail(onSuccess: () -> Unit) {
         viewModelScope.launch {
-            // TODO: Заменить на реальный API вызов
+            // Имитация отправки письма
+            delay(1000)
 
-            // Временная заглушка
-            onSuccess()
-            showError("Письмо отправлено повторно! Проверьте почту")
+            // В реальном проекте здесь был бы API запрос
+            val success = true
+
+            if (success) {
+                onSuccess()
+                showError("Письмо отправлено повторно! Проверьте почту")
+            } else {
+                showError("Не удалось отправить письмо. Попробуйте позже")
+            }
         }
     }
 }
