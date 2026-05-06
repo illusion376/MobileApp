@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import io.github.illusion.mobileapp.ui.screens.login.LoginScreen
+import io.github.illusion.mobileapp.ui.screens.main.MainScreen
 import io.github.illusion.mobileapp.ui.screens.register.RegisterScreen
 import io.github.illusion.mobileapp.ui.screens.verification.VerificationScreen
 
@@ -13,17 +14,18 @@ sealed class Screen {
     object Login : Screen()
     object Register : Screen()
     data class Verification(val email: String) : Screen()
+    object Main : Screen()
 }
 
 @Composable
 fun NavigationGraph() {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Login) }
 
-    // Без анимаций - просто показываем нужный экран
     when (currentScreen) {
         is Screen.Login -> {
             LoginScreen(
-                onNavigateToRegister = { currentScreen = Screen.Register }
+                onNavigateToRegister = { currentScreen = Screen.Register },
+                onNavigateToMain = { currentScreen = Screen.Main }  // TODO: После успешного входа
             )
         }
         is Screen.Register -> {
@@ -38,10 +40,14 @@ fun NavigationGraph() {
             VerificationScreen(
                 email = (currentScreen as Screen.Verification).email,
                 onVerificationComplete = {
-                    // TODO: Переход на главный экран
-                    currentScreen = Screen.Login
+                    currentScreen = Screen.Main  // TODO: После подтверждения email
                 },
                 onBackToLogin = { currentScreen = Screen.Login }
+            )
+        }
+        is Screen.Main -> {
+            MainScreen(
+                onLogout = { currentScreen = Screen.Login }
             )
         }
     }
