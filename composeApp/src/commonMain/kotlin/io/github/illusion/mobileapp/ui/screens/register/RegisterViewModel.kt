@@ -132,7 +132,7 @@ class RegisterViewModel : ViewModel() {
         }
     }
 
-    fun onRegisterClick(onSuccess: () -> Unit) {
+    fun onRegisterClick(onSuccess: (String) -> Unit) { // Теперь передаем email
         viewModelScope.launch {
             _uiState.update { state ->
                 state.copy(errorMessage = null)
@@ -163,7 +163,7 @@ class RegisterViewModel : ViewModel() {
             }
 
             // Успешная регистрация - сразу переходим на логин
-            onSuccess()
+            onSuccess(_uiState.value.email)
         }
     }
 }

@@ -1,6 +1,7 @@
 package io.github.illusion.mobileapp.ui.screens.login
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -15,30 +16,42 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 
 @Composable
 fun ErrorBanner(
     errorMessage: String?,
     onDismiss: () -> Unit
 ) {
+    // Автоматическое исчезновение через 3 секунды
+    LaunchedEffect(errorMessage) {
+        if (errorMessage != null) {
+            delay(3000)
+            onDismiss()
+        }
+    }
+
     AnimatedVisibility(
         visible = errorMessage != null,
         enter = slideInVertically(
-            initialOffsetY = { -it }
-        ) + fadeIn(),
+            initialOffsetY = { -it },
+            animationSpec = tween(300)
+        ) + fadeIn(animationSpec = tween(300)),
         exit = slideOutVertically(
-            targetOffsetY = { -it }
-        ) + fadeOut()
+            targetOffsetY = { -it },
+            animationSpec = tween(300)
+        ) + fadeOut(animationSpec = tween(300))
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .statusBarsPadding() // Добавляем отступ для статус-бара (камера)
+                .statusBarsPadding()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(Color(0xFFE53935))
