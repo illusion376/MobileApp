@@ -2,13 +2,14 @@ package io.github.illusion.mobileapp.ui.screens.register
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.illusion.mobileapp.domain.usecase.RegisterUserUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class RegisterViewModel : ViewModel() {
+class RegisterViewModel(private val registerUserUseCase: RegisterUserUseCase) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUIState())
     val uiState: StateFlow<RegisterUIState> = _uiState.asStateFlow()
@@ -131,41 +132,47 @@ class RegisterViewModel : ViewModel() {
         }
     }
 
-    fun onRegisterClick(onSuccess: (String) -> Unit) {
+    fun onRegisterClick(onSuccess: () -> Unit) {
         viewModelScope.launch {
             _uiState.update { state ->
                 state.copy(errorMessage = null)
             }
 
-            // TODO: Заменить на реальный API вызов
-
-            // Временная заглушка для тестирования
-            val email = _uiState.value.email
-            val username = _uiState.value.username
-            val password = _uiState.value.password
-            val confirmPassword = _uiState.value.confirmPassword
-
-            if (email.isBlank() || username.isBlank() || password.isBlank()) {
-                _uiState.update { it.copy(errorMessage = "Заполните все поля") }
+            // Проверка пароля
+            if (_uiState.value.password != _uiState.value.confirmPassword) {
+                _uiState.update { state ->
+                    state.copy(errorMessage = "Пароли не совпадают")
+                }
                 return@launch
             }
 
-            if (!email.contains("@")) {
-                _uiState.update { it.copy(errorMessage = "Введите корректный email") }
+            // Проверка email
+            if (!_uiState.value.email.contains("@")) {
+                _uiState.update { state ->
+                    state.copy(errorMessage = "Введите корректный email")
+                }
                 return@launch
             }
 
-            if (password.length < 4) {
-                _uiState.update { it.copy(errorMessage = "Пароль должен быть не менее 4 символов") }
+            // Проверка длины пароля
+            if (_uiState.value.password.length < 6) {
+                _uiState.update { state ->
+                    state.copy(errorMessage = "Пароль должен быть не менее 6 символов")
+                }
                 return@launch
             }
 
-            if (password != confirmPassword) {
-                _uiState.update { it.copy(errorMessage = "Пароли не совпадают") }
-                return@launch
-            }
+            val result = registerUserUseCase(_uiState.value.email, _uiState.value.username, _uiState.value.password)
 
-            onSuccess(email)
+            if (result.isSuccess) {
+                // TODO: Переход на экран подтверждения
+                onSuccess()
+            } else {
+                _uiState.update { state ->
+                    state.copy(
+                        errorMessage = result.getOrNull()?.message
+                    )
+                }
+            }
         }
-    }
 }

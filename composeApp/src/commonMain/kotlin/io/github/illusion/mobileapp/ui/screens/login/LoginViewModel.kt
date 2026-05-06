@@ -2,13 +2,15 @@ package io.github.illusion.mobileapp.ui.screens.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.illusion.mobileapp.domain.usecase.LoginUserUseCase
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(private val loginUserUseCase: LoginUserUseCase) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUIState())
     val uiState: StateFlow<LoginUIState> = _uiState.asStateFlow()
@@ -47,18 +49,27 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(errorMessage = null) }
 
-            // TODO: Заменить на реальный API вызов
+            // Проверка логина и пароля
+            val result = loginUserUseCase(_uiState.value.login, _uiState.value.password)
 
-            // Временная заглушка для тестирования
-            val success = _uiState.value.login == "admin" && _uiState.value.password == "123"
-            if (success) {
+            if (result.isSuccess) {
                 if (_uiState.value.isRememberMe) {
-                    // TODO: Сохранить логин и пароль
+                    saveCredentials(_uiState.value.login, _uiState.value.password)
                 }
-                onSuccess()
+                // TODO: Переход на главный экран
+                println("Успешный вход!")
             } else {
-                _uiState.update { it.copy(errorMessage = "Неверный логин или пароль") }
+                _uiState.update { state ->
+                    state.copy(
+                        errorMessage = "Неправильный логин или пароль"
+                    )
+                }
             }
         }
+    }
+
+    private fun saveCredentials(login: String, password: String) {
+        // TODO: Сохранить в DataStore/SharedPreferences
+        println("Сохранены данные: $login / $password")
     }
 }

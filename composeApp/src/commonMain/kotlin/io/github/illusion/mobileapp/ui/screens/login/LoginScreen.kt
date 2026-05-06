@@ -32,7 +32,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import mobileapp.composeapp.generated.resources.Res
 import mobileapp.composeapp.generated.resources.ic_lock
 import mobileapp.composeapp.generated.resources.ic_user
@@ -40,14 +39,15 @@ import org.jetbrains.compose.resources.painterResource
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.unit.sp
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit = {},
     onNavigateToMain: () -> Unit = {},
-    viewModel: LoginViewModel = viewModel()
+    loginViewModel: LoginViewModel = koinViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by loginViewModel.uiState.collectAsStateWithLifecycle()
 
     Box(
         modifier = Modifier
@@ -64,11 +64,11 @@ fun LoginScreen(
     ) {
         LoginContent(
             uiState = uiState,
-            onLoginChange = viewModel::updateLogin,
-            onPasswordChange = viewModel::updatePassword,
-            onRememberMeChange = viewModel::updateRememberMe,
+            onLoginChange = loginViewModel::updateLogin,
+            onPasswordChange = loginViewModel::updatePassword,
+            onRememberMeChange = loginViewModel::updateRememberMe,
             onLoginClick = {
-                viewModel.onLoginClick(
+                loginViewModel.onLoginClick(
                     onSuccess = onNavigateToMain
                 )
             },
@@ -78,7 +78,7 @@ fun LoginScreen(
         // Выплывающее уведомление об ошибке
         ErrorBanner(
             errorMessage = uiState.errorMessage,
-            onDismiss = { viewModel.clearError() }
+            onDismiss = { loginViewModel.clearError() }
         )
     }
 }
