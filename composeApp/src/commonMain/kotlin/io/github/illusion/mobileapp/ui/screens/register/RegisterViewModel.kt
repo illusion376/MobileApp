@@ -2,7 +2,6 @@ package io.github.illusion.mobileapp.ui.screens.register
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -132,38 +131,41 @@ class RegisterViewModel : ViewModel() {
         }
     }
 
-    fun onRegisterClick(onSuccess: (String) -> Unit) { // Теперь передаем email
+    fun onRegisterClick(onSuccess: (String) -> Unit) {
         viewModelScope.launch {
             _uiState.update { state ->
                 state.copy(errorMessage = null)
             }
 
-            // Проверка пароля
-            if (_uiState.value.password != _uiState.value.confirmPassword) {
-                _uiState.update { state ->
-                    state.copy(errorMessage = "Пароли не совпадают")
-                }
+            // TODO: Заменить на реальный API вызов
+
+            // Временная заглушка для тестирования
+            val email = _uiState.value.email
+            val username = _uiState.value.username
+            val password = _uiState.value.password
+            val confirmPassword = _uiState.value.confirmPassword
+
+            if (email.isBlank() || username.isBlank() || password.isBlank()) {
+                _uiState.update { it.copy(errorMessage = "Заполните все поля") }
                 return@launch
             }
 
-            // Проверка email
-            if (!_uiState.value.email.contains("@")) {
-                _uiState.update { state ->
-                    state.copy(errorMessage = "Введите корректный email")
-                }
+            if (!email.contains("@")) {
+                _uiState.update { it.copy(errorMessage = "Введите корректный email") }
                 return@launch
             }
 
-            // Проверка длины пароля
-            if (_uiState.value.password.length < 4) {
-                _uiState.update { state ->
-                    state.copy(errorMessage = "Пароль должен быть не менее 4 символов")
-                }
+            if (password.length < 4) {
+                _uiState.update { it.copy(errorMessage = "Пароль должен быть не менее 4 символов") }
                 return@launch
             }
 
-            // Успешная регистрация - сразу переходим на логин
-            onSuccess(_uiState.value.email)
+            if (password != confirmPassword) {
+                _uiState.update { it.copy(errorMessage = "Пароли не совпадают") }
+                return@launch
+            }
+
+            onSuccess(email)
         }
     }
 }
