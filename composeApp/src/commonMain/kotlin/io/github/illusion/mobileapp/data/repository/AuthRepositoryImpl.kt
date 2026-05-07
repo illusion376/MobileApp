@@ -38,11 +38,12 @@ class AuthRepositoryImpl(
     ): Result<RegisterStatus> = runCatching {
         val response = userApi.register(RegisterRequestDTO(email, login, password))
         val status = response.status
-        println(status)
-        if(status == 201)
-            RegisterStatus(status)
 
-        throw Exception("Register failed")
+        if(status == 201){
+            RegisterStatus(status)
+        }else{
+            throw Exception("Register failed")
+        }
     }
 
     override suspend fun verification(email: String): Result<VerificationStatus> {
@@ -50,9 +51,9 @@ class AuthRepositoryImpl(
             val response = userApi.verification(VerificationRequestDTO(email))
             if(response.status == 409){
                 VerificationStatus(response.status)
+            }else{
+                throw Exception("Verification failed")
             }
-
-            throw Exception("Verification failed")
         }
     }
 

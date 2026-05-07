@@ -18,6 +18,7 @@ import org.koin.dsl.module
 val screenModule = module {
     singleOf(::UserApi)
     singleOf(::AuthRepositoryImpl) bind AuthRepository::class
+    
     factoryOf(::LoginUserUseCase)
     factoryOf(::RegisterUserUseCase)
     factoryOf(::VerificationUserUseCase)
