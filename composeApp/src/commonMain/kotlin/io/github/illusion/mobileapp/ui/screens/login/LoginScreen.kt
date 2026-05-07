@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit = {},
+    onNavigateToMain: () -> Unit = {},
     viewModel: LoginViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -66,7 +67,11 @@ fun LoginScreen(
             onLoginChange = viewModel::updateLogin,
             onPasswordChange = viewModel::updatePassword,
             onRememberMeChange = viewModel::updateRememberMe,
-            onLoginClick = { viewModel.onLoginClick() },
+            onLoginClick = {
+                viewModel.onLoginClick(
+                    onSuccess = onNavigateToMain
+                )
+            },
             onNavigateToRegister = onNavigateToRegister
         )
 

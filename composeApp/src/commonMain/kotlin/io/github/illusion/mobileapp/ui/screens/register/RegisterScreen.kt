@@ -44,6 +44,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun RegisterScreen(
     onBackToLogin: () -> Unit = {},
+    onNavigateToVerification: (String) -> Unit = {},  // ← НОВЫЙ ПАРАМЕТР: переход на верификацию с email
     viewModel: RegisterViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -70,7 +71,9 @@ fun RegisterScreen(
             onTermsAcceptedChange = viewModel::updateTermsAccepted,
             onRegisterClick = {
                 viewModel.onRegisterClick(
-                    onSuccess = onBackToLogin
+                    onSuccess = { email ->  // ← Теперь передаем email
+                        onNavigateToVerification(email)  // ← Переход на экран верификации
+                    }
                 )
             },
             onBackToLogin = onBackToLogin

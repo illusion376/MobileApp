@@ -2,7 +2,6 @@ package io.github.illusion.mobileapp.ui.screens.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,44 +43,22 @@ class LoginViewModel : ViewModel() {
         }
     }
 
-    fun onLoginClick() {
+    fun onLoginClick(onSuccess: () -> Unit) {
         viewModelScope.launch {
-            _uiState.update { state ->
-                state.copy(errorMessage = null)
-            }
+            _uiState.update { it.copy(errorMessage = null) }
 
-            // Имитация запроса к серверу
-            delay(1000)
+            // TODO: Заменить на реальный API вызов
 
-            // Проверка логина и пароля
-            val success = performLogin(
-                _uiState.value.login,
-                _uiState.value.password
-            )
-
+            // Временная заглушка для тестирования
+            val success = _uiState.value.login == "admin" && _uiState.value.password == "123"
             if (success) {
                 if (_uiState.value.isRememberMe) {
-                    saveCredentials(_uiState.value.login, _uiState.value.password)
+                    // TODO: Сохранить логин и пароль
                 }
-                // TODO: Переход на главный экран
-                println("Успешный вход!")
+                onSuccess()
             } else {
-                _uiState.update { state ->
-                    state.copy(
-                        errorMessage = "Неверный логин или пароль"
-                    )
-                }
+                _uiState.update { it.copy(errorMessage = "Неверный логин или пароль") }
             }
         }
-    }
-
-    private suspend fun performLogin(login: String, password: String): Boolean {
-        // TODO: Заменить на реальный API запрос
-        return login == "admin" && password == "123"
-    }
-
-    private fun saveCredentials(login: String, password: String) {
-        // TODO: Сохранить в DataStore/SharedPreferences
-        println("Сохранены данные: $login / $password")
     }
 }
