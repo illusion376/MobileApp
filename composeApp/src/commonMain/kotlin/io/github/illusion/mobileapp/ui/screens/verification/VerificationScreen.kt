@@ -29,13 +29,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import mobileapp.composeapp.generated.resources.Res
 import mobileapp.composeapp.generated.resources.ic_email
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun VerificationScreen(
     email: String,
     onVerificationComplete: () -> Unit,
     onBackToLogin: () -> Unit,
-    viewModel: VerificationViewModel = viewModel()
+    viewModel: VerificationViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 

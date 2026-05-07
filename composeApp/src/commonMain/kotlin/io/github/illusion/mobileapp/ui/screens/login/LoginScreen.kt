@@ -40,12 +40,13 @@ import org.jetbrains.compose.resources.painterResource
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.unit.sp
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit = {},
     onNavigateToMain: () -> Unit = {},
-    viewModel: LoginViewModel = viewModel()
+    viewModel: LoginViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 

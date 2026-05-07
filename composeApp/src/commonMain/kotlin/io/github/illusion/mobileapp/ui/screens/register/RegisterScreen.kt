@@ -40,12 +40,13 @@ import mobileapp.composeapp.generated.resources.ic_email
 import mobileapp.composeapp.generated.resources.ic_lock
 import mobileapp.composeapp.generated.resources.ic_user
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun RegisterScreen(
     onBackToLogin: () -> Unit = {},
     onNavigateToVerification: (String) -> Unit = {},  // ← НОВЫЙ ПАРАМЕТР: переход на верификацию с email
-    viewModel: RegisterViewModel = viewModel()
+    viewModel: RegisterViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 

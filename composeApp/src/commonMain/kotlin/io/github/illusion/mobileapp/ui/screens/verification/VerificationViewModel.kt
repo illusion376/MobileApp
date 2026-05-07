@@ -2,14 +2,17 @@ package io.github.illusion.mobileapp.ui.screens.verification
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.illusion.mobileapp.domain.usecase.RegisterUserUseCase
+import io.github.illusion.mobileapp.domain.usecase.VerificationUserUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
-class VerificationViewModel : ViewModel() {
+class VerificationViewModel(private val verificationUserUseCase: VerificationUserUseCase) : ViewModel() {
 
     private val _uiState = MutableStateFlow(VerificationUIState())
     val uiState: StateFlow<VerificationUIState> = _uiState.asStateFlow()
@@ -34,10 +37,10 @@ class VerificationViewModel : ViewModel() {
 
     fun checkVerificationStatus(onVerified: () -> Unit) {
         viewModelScope.launch {
-            // TODO: Заменить на реальный API вызов с периодической проверкой
 
-            // Временная заглушка (автоматический переход через 5 сек для теста)
-            delay(5000)
+            while(verificationUserUseCase(_uiState.value.email).isFailure) {
+                delay(5000.milliseconds)
+            }
             onVerified()
         }
     }

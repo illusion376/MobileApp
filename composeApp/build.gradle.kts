@@ -52,7 +52,6 @@ kotlin {
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.russhwolf)
-
             implementation(libs.androidx.lifecycle.viewmodelCompose)
 
         }

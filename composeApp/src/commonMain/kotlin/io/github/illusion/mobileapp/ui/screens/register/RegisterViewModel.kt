@@ -2,13 +2,14 @@ package io.github.illusion.mobileapp.ui.screens.register
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.illusion.mobileapp.domain.usecase.RegisterUserUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class RegisterViewModel : ViewModel() {
+class RegisterViewModel(private val registerUserUseCase: RegisterUserUseCase) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUIState())
     val uiState: StateFlow<RegisterUIState> = _uiState.asStateFlow()
@@ -137,9 +138,6 @@ class RegisterViewModel : ViewModel() {
                 state.copy(errorMessage = null)
             }
 
-            // TODO: Заменить на реальный API вызов
-
-            // Временная заглушка для тестирования
             val email = _uiState.value.email
             val username = _uiState.value.username
             val password = _uiState.value.password
@@ -155,8 +153,8 @@ class RegisterViewModel : ViewModel() {
                 return@launch
             }
 
-            if (password.length < 4) {
-                _uiState.update { it.copy(errorMessage = "Пароль должен быть не менее 4 символов") }
+            if (password.length < 6) {
+                _uiState.update { it.copy(errorMessage = "Пароль должен быть не менее 6 символов") }
                 return@launch
             }
 
@@ -165,7 +163,11 @@ class RegisterViewModel : ViewModel() {
                 return@launch
             }
 
-            onSuccess(email)
+            val registerResult = registerUserUseCase(email, username, password)
+
+            if(registerResult.isSuccess) {
+                onSuccess(email)
+            }
         }
     }
 }
