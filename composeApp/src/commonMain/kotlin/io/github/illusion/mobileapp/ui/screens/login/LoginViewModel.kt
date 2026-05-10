@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.log
 
 class LoginViewModel(private val loginUserUseCase: LoginUserUseCase) : ViewModel() {
 
@@ -50,16 +51,14 @@ class LoginViewModel(private val loginUserUseCase: LoginUserUseCase) : ViewModel
 
             val email = _uiState.value.login
             val password = _uiState.value.password
-            val loginResult = loginUserUseCase(email, password)
 
-            if (loginResult.isSuccess) {
-                if (_uiState.value.isRememberMe) {
-                    // TODO: Сохранить логин и пароль
+            loginUserUseCase(email, password)
+                .onSuccess {
+                    onSuccess()
                 }
-                onSuccess()
-            } else {
-                _uiState.update { it.copy(errorMessage = "Неверный логин или пароль") }
-            }
+                .onFailure{
+                    _uiState.update { it.copy(errorMessage = "Неверный логин или пароль") }
+                }
         }
     }
 }

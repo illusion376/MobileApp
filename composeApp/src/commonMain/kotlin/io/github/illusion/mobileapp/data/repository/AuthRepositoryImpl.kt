@@ -7,11 +7,13 @@ import io.github.illusion.mobileapp.data.remote.dto.LoginResponseDTO
 import io.github.illusion.mobileapp.data.remote.dto.RegisterRequestDTO
 import io.github.illusion.mobileapp.data.remote.dto.RegisterResponseDTO
 import io.github.illusion.mobileapp.data.remote.dto.VerificationRequestDTO
+import io.github.illusion.mobileapp.data.remote.dto.VerificationResponseDTO
 import io.github.illusion.mobileapp.domain.features.auth.TokenStorage
 import io.github.illusion.mobileapp.domain.model.RegisterStatus
 import io.github.illusion.mobileapp.domain.model.User
 import io.github.illusion.mobileapp.domain.model.VerificationStatus
 import io.github.illusion.mobileapp.domain.repository.AuthRepository
+import kotlinx.coroutines.flow.Flow
 
 class AuthRepositoryImpl(
     private val userApi: UserApi,
@@ -19,7 +21,6 @@ class AuthRepositoryImpl(
 ) : AuthRepository {
     override suspend fun login(email: String, password: String): Result<User> {
         return runCatching {
-
             val response = userApi.login(LoginRequestDTO(email, password))
 
             val token = response.token ?: throw Exception("Token is missing")
@@ -46,15 +47,8 @@ class AuthRepositoryImpl(
         }
     }
 
-    override suspend fun verification(email: String): Result<VerificationStatus> {
-        return runCatching {
-            val response = userApi.verification(VerificationRequestDTO(email))
-            if(response.status == 409){
-                VerificationStatus(response.status)
-            }else{
-                throw Exception("Verification failed")
-            }
-        }
+    override fun getVerificationStatus(email: String): Flow<Result<VerificationResponseDTO>> {
+        return userApi.verification(VerificationRequestDTO(email.trim()))
     }
 
 }
