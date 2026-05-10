@@ -2,13 +2,15 @@ package io.github.illusion.mobileapp.ui.screens.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.illusion.mobileapp.domain.usecase.LoginUserUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.log
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(private val loginUserUseCase: LoginUserUseCase) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUIState())
     val uiState: StateFlow<LoginUIState> = _uiState.asStateFlow()
@@ -47,18 +49,16 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(errorMessage = null) }
 
-            // TODO: Заменить на реальный API вызов
+            val email = _uiState.value.login
+            val password = _uiState.value.password
 
-            // Временная заглушка для тестирования
-            val success = _uiState.value.login == "admin" && _uiState.value.password == "123"
-            if (success) {
-                if (_uiState.value.isRememberMe) {
-                    // TODO: Сохранить логин и пароль
+            loginUserUseCase(email, password)
+                .onSuccess {
+                    onSuccess()
                 }
-                onSuccess()
-            } else {
-                _uiState.update { it.copy(errorMessage = "Неверный логин или пароль") }
-            }
+                .onFailure{
+                    _uiState.update { it.copy(errorMessage = "Неверный логин или пароль") }
+                }
         }
     }
 }
