@@ -163,11 +163,17 @@ class RegisterViewModel(private val registerUserUseCase: RegisterUserUseCase) : 
                 return@launch
             }
 
-            val registerResult = registerUserUseCase(email, username, password)
-
-            if(registerResult.isSuccess) {
-                onSuccess(email)
-            }
+            registerUserUseCase(email, username, password)
+                .onSuccess {
+                    onSuccess(email)
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            errorMessage = error.message ?: "Ошибка регистрации"
+                        )
+                    }
+                }
         }
     }
 }

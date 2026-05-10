@@ -37,13 +37,18 @@ class VerificationViewModel(private val verificationUserUseCase: VerificationUse
 
     fun checkVerificationStatus(onVerified: () -> Unit) {
         viewModelScope.launch {
-
-            while(verificationUserUseCase(_uiState.value.email).isFailure) {
-                delay(5000.milliseconds)
+            verificationUserUseCase(_uiState.value.email).collect { result ->
+                result.onSuccess { response ->
+                    if (response.isVerified) {
+                        onVerified()
+                    }
+                }.onFailure { error ->
+                    showError("Ошибка: ${error.message}")
+                }
             }
-            onVerified()
         }
     }
+
 
     fun resendVerificationEmail(onSuccess: () -> Unit) {
         viewModelScope.launch {
