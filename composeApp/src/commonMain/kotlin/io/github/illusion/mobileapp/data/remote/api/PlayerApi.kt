@@ -10,7 +10,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
 class PlayerApi(private val httpClient: HttpClient) {
-    suspend fun getPlayer(userId : Int): PlayerCharacterDTO {
+    suspend fun getPlayer(userId : String): PlayerCharacterDTO {
         return httpClient.get("${HttpString.URL}/character/$userId").body<PlayerCharacterDTO>()
     }
 }

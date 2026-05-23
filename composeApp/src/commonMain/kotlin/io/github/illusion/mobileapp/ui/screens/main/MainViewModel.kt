@@ -2,6 +2,8 @@ package io.github.illusion.mobileapp.ui.screens.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.illusion.mobileapp.data.repository.KSafeRepositoryImpl
+import io.github.illusion.mobileapp.domain.repository.KSafeRepository
 import io.github.illusion.mobileapp.domain.usecase.GetCharacterUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,7 +11,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class MainViewModel(private val getCharacterUseCase: GetCharacterUseCase) : ViewModel() {
+class MainViewModel(
+    private val getCharacterUseCase: GetCharacterUseCase,
+    private val kSafeRepository: KSafeRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(initialState())
     val uiState: StateFlow<MainUIState> = _uiState.asStateFlow()
@@ -39,10 +44,10 @@ class MainViewModel(private val getCharacterUseCase: GetCharacterUseCase) : View
         _uiState.update { it.copy(errorMessage = null) }
     }
 
-    private fun loadCharacter() {
+    public fun loadCharacter() {
         viewModelScope.launch {
-
-            val character = getCharacterUseCase(19).getOrNull()
+            val userId = kSafeRepository.getDataOrNull("userId") ?: "guest"
+            val character = getCharacterUseCase(userId).getOrNull()
             if (character != null) {
                 _uiState.value = MainUIState.fromCharacter(character)
             }

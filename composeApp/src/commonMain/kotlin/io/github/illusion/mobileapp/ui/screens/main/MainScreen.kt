@@ -18,20 +18,27 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
@@ -42,15 +49,21 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.koin.compose.koinInject
 
-private val BgDark = Color(0xFF2A2A21)
-private val SurfaceCard = Color(0xFF3A3A2E)
-private val TrackColor = Color(0xFF4A4A38)
-private val Accent = Color(0xFFC5C744)
-private val AccentDim = Color(0xFF45453A)
-private val TextPrimary = Color(0xFFEDEDE0)
-private val TextSecondary = Color(0xFF9D9D86)
-private val DividerColor = Color(0xFF5A5A48)
-private val DarkOnAccent = Color(0xFF1F1F17)
+private val BgDark = Color(0xFF1B1B15)       // Темный фон приложения (как на экране авторизации)
+private val SurfaceCard = Color(0xFF2E2D24)  // Фон для карточек и полей ввода
+private val TrackColor = Color(0xFF2B2A21)   // Цвет незаполненных элементов / неактивной кнопки
+private val Accent = Color(0xFFBBBD3D)       // Более мягкий, приглушенный желтый цвет
+private val AccentDim = Color(0xFF535246)    // Темный оттенок для неактивного текста на кнопке
+private val TextPrimary = Color(0xFFEDEDE0)  // Яркий белый текст (для LOGO)
+private val TextSecondary = Color(0xFF7E7D73)// Серый текст для подписей и описания
+private val DividerColor = Color(0xFFFFFFFF).copy(alpha = 0.07f) // Цвет разделителей в тон карточек
+private val DarkOnAccent = Color(0xFF1B1B15) // Темный цвет текста для контраста на желтом фоне
+private val ButtonGradientStart = Color(0xFFE2E74A) // Яркий лимонный (верх кнопки)
+private val ButtonGradientEnd = Color(0xFFB0B232)   // Приглушенный оливково-желтый (низ кнопк
+val GlassColor = Color(0xFFFFFFFF).copy(alpha = 0.03f)
+
+// 2. Граница «стекла», чтобы подчеркнуть форму
+val GlassBorder = Color(0xFFFFFFFF).copy(alpha = 0.06f)
 
 @Composable
 fun MainScreen(
@@ -63,6 +76,7 @@ fun MainScreen(
 
     MainContent(
         state = state,
+        onRefresh = viewModel::loadCharacter,
         onDismissError = viewModel::dismissError,
         onInventoryClick = viewModel::onInventoryClick,
         onQuestsClick = viewModel::onQuestsClick,
@@ -73,9 +87,12 @@ fun MainScreen(
     )
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MainContent(
     state: MainUIState,
+    onRefresh: () -> Unit,
     onDismissError: () -> Unit,
     onInventoryClick: () -> Unit,
     onQuestsClick: () -> Unit,
@@ -84,60 +101,68 @@ private fun MainContent(
     onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    PullToRefreshBox(
+        isRefreshing = state.isLoading,
+        onRefresh = onRefresh,
         modifier = modifier
             .fillMaxSize()
-            .background(BgDark)
-            .padding(horizontal = 14.dp)
-            .padding(top = 8.dp, bottom = 16.dp),
+            .background(BgDark),
     ) {
-        TopBar(onLogoutClick = onLogoutClick)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 14.dp)
+                .padding(top = 8.dp, bottom = 16.dp),
+        ) {
+            TopBar(onLogoutClick = onLogoutClick)
 
-        state.errorMessage?.let { msg ->
+            state.errorMessage?.let { msg ->
+                Spacer(Modifier.height(8.dp))
+                ErrorBannerMain(message = msg, onDismiss = onDismissError)
+            }
+
+            Spacer(Modifier.height(4.dp))
+            TopStatsRow(
+                steps = state.todaySteps,
+                calories = state.caloriesBurned,
+                minutes = state.walkMinutes,
+            )
+            Spacer(Modifier.height(10.dp))
+
+            DisciplineCard(
+                title = state.disciplineTitle,
+                subtitle = state.disciplineSubtitle,
+            )
             Spacer(Modifier.height(8.dp))
-            ErrorBannerMain(message = msg, onDismiss = onDismissError)
+
+            NextLevelCard(
+                nextLevel = state.nextLevel,
+                currentXp = state.currentXp,
+                xpToNext = state.xpToNextLevel,
+                progress = state.xpProgress,
+            )
+            Spacer(Modifier.height(8.dp))
+
+            StreakCard(
+                days = state.weeklyStreakDone,
+                currentIndex = state.currentWeekdayIndex,
+                streakDays = state.streakDays,
+            )
+            Spacer(Modifier.height(8.dp))
+
+            StatsCard(stats = state.stats)
+            Spacer(Modifier.height(8.dp))
+
+            ActionsRow(
+                onInventoryClick = onInventoryClick,
+                onQuestsClick = onQuestsClick,
+                onBossesClick = onBossesClick,
+            )
+            Spacer(Modifier.weight(1f, fill = true).heightIn(min = 10.dp))
+
+            StartTrainingButton(onClick = onStartTrainingClick)
         }
-
-        Spacer(Modifier.height(4.dp))
-        TopStatsRow(
-            steps = state.todaySteps,
-            calories = state.caloriesBurned,
-            minutes = state.walkMinutes,
-        )
-        Spacer(Modifier.height(10.dp))
-
-        DisciplineCard(
-            title = state.disciplineTitle,
-            subtitle = state.disciplineSubtitle,
-        )
-        Spacer(Modifier.height(8.dp))
-
-        NextLevelCard(
-            nextLevel = state.nextLevel,
-            currentXp = state.currentXp,
-            xpToNext = state.xpToNextLevel,
-            progress = state.xpProgress,
-        )
-        Spacer(Modifier.height(8.dp))
-
-        StreakCard(
-            days = state.weeklyStreakDone,
-            currentIndex = state.currentWeekdayIndex,
-            streakDays = state.streakDays,
-        )
-        Spacer(Modifier.height(8.dp))
-
-        StatsCard(stats = state.stats)
-        Spacer(Modifier.height(8.dp))
-
-        ActionsRow(
-            onInventoryClick = onInventoryClick,
-            onQuestsClick = onQuestsClick,
-            onBossesClick = onBossesClick,
-        )
-        Spacer(Modifier.weight(1f, fill = true).heightIn(min = 10.dp))
-
-        StartTrainingButton(onClick = onStartTrainingClick)
     }
 }
 
@@ -167,34 +192,45 @@ private fun TopBar(onLogoutClick: () -> Unit) {
 
 @Composable
 private fun TopStatsRow(steps: Int, calories: Int, minutes: Int) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(50))
-            .background(SurfaceCard)
-            .padding(vertical = 12.dp, horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    Box(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        MiniStat(
-            icon = MainIconType.Boot,
-            value = steps.toString(),
-            label = "ШАГОВ",
-            modifier = Modifier.weight(1f),
+        Box(
+            modifier = Modifier
+                .matchParentSize() // Заполняет размер родительского Box
+                .clip(RoundedCornerShape(12.dp))
+                .background(GlassColor)
+                .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
+                .blur(radius = 16.dp)
         )
-        ColumnDivider(height = 28.dp)
-        MiniStat(
-            icon = MainIconType.Fire,
-            value = calories.toString(),
-            label = "ККАЛ",
-            modifier = Modifier.weight(1f),
-        )
-        ColumnDivider(height = 28.dp)
-        MiniStat(
-            icon = MainIconType.Clock,
-            value = minutes.toString(),
-            label = "МИН",
-            modifier = Modifier.weight(1f),
-        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp, horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            MiniStat(
+                icon = MainIconType.Boot,
+                value = steps.toString(),
+                label = "ШАГОВ",
+                modifier = Modifier.weight(1f),
+            )
+            ColumnDivider(height = 28.dp)
+            MiniStat(
+                icon = MainIconType.Fire,
+                value = calories.toString(),
+                label = "ККАЛ",
+                modifier = Modifier.weight(1f),
+            )
+            ColumnDivider(height = 28.dp)
+            MiniStat(
+                icon = MainIconType.Clock,
+                value = minutes.toString(),
+                label = "МИН",
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 }
 
@@ -286,6 +322,68 @@ private fun DisciplineCard(
         }
     }
 }
+
+//@Composable
+//private fun DisciplineCard(
+//    title: String,
+//    subtitle: String,
+//    modifier: Modifier = Modifier,
+//) {
+//    Box(
+//        modifier = modifier.fillMaxWidth()
+//    ) {
+//        Box(
+//            modifier = Modifier
+//                .matchParentSize()
+//                .clip(RoundedCornerShape(14.dp))
+//                .background(GlassColor)
+//                .border(1.dp, GlassBorder, RoundedCornerShape(14.dp))
+//                .blur(radius = 16.dp)
+//        )
+//
+//        Column(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(14.dp),
+//        ) {
+//            Text(
+//                text = "ТВОЙ ПРОГРЕСС СЕГОДНЯ",
+//                color = TextPrimary,
+//                fontSize = 11.sp,
+//                fontWeight = FontWeight.Bold,
+//                letterSpacing = 1.5.sp,
+//            )
+//            Spacer(Modifier.height(10.dp))
+//            Row(
+//                modifier = Modifier.fillMaxWidth(),
+//                verticalAlignment = Alignment.CenterVertically,
+//            ) {
+//                MainIcon(
+//                    type = MainIconType.Emblem,
+//                    tint = Accent,
+//                    modifier = Modifier.size(120.dp),
+//                )
+//                Spacer(Modifier.width(12.dp))
+//                Column(Modifier.weight(1f)) {
+//                    Text(
+//                        text = title,
+//                        color = TextPrimary,
+//                        fontSize = 16.sp,
+//                        fontWeight = FontWeight.Bold,
+//                        letterSpacing = 0.5.sp,
+//                    )
+//                    Spacer(Modifier.height(6.dp))
+//                    Text(
+//                        text = subtitle,
+//                        color = TextSecondary,
+//                        fontSize = 12.sp,
+//                        lineHeight = 16.sp,
+//                    )
+//                }
+//            }
+//        }
+//    }
+//}
 
 @Composable
 private fun NextLevelCard(
@@ -424,6 +522,7 @@ private fun StreakDay(label: String, isCompleted: Boolean, isCurrent: Boolean) {
                     color = Accent,
                     modifier = Modifier.size(16.dp),
                 )
+
                 isCurrent -> Box(
                     modifier = Modifier
                         .size(7.dp)
@@ -459,36 +558,48 @@ private fun CheckMark(color: Color, modifier: Modifier = Modifier) {
 
 @Composable
 private fun StatsCard(stats: PlayerStats) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(SurfaceCard)
-            .padding(vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    Box(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        StatItem(
-            icon = MainIconType.Sword,
-            label = "СТР",
-            value = stats.strength,
-            modifier = Modifier.weight(1f),
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clip(RoundedCornerShape(12.dp))
+                .background(GlassColor)
+                .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
+                .blur(radius = 16.dp)
         )
-        ColumnDivider(height = 36.dp)
-        StatItem(
-            icon = MainIconType.Shield,
-            label = "ВИТ",
-            value = stats.vitality,
-            modifier = Modifier.weight(1f),
-        )
-        ColumnDivider(height = 36.dp)
-        StatItem(
-            icon = MainIconType.Sparkle,
-            label = "СТА",
-            value = stats.stamina,
-            modifier = Modifier.weight(1f),
-        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            StatItem(
+                icon = MainIconType.Sword,
+                label = "СТР",
+                value = stats.strength,
+                modifier = Modifier.weight(1f),
+            )
+            ColumnDivider(height = 24.dp)
+            StatItem(
+                icon = MainIconType.Shield,
+                label = "ВИТ",
+                value = stats.vitality,
+                modifier = Modifier.weight(1f),
+            )
+            ColumnDivider(height = 24.dp)
+            StatItem(
+                icon = MainIconType.Sparkle,
+                label = "СТА",
+                value = stats.stamina,
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 }
+
 
 @Composable
 private fun StatItem(
@@ -504,8 +615,8 @@ private fun StatItem(
     ) {
         MainIcon(
             type = icon,
-            tint = TextPrimary,
-            modifier = Modifier.size(24.dp),
+            tint = TextSecondary,
+            modifier = Modifier.size(18.dp),
         )
         Spacer(Modifier.width(8.dp))
         Column {
@@ -526,42 +637,61 @@ private fun StatItem(
     }
 }
 
+
 @Composable
 private fun ActionsRow(
     onInventoryClick: () -> Unit,
     onQuestsClick: () -> Unit,
     onBossesClick: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(SurfaceCard)
-            .padding(vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    Box(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        ActionTile(
-            label = "ИНВЕНТАРЬ",
-            icon = MainIconType.Backpack,
-            onClick = onInventoryClick,
-            modifier = Modifier.weight(1f),
+        // Слой 1: Размытая стеклянная подложка
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clip(RoundedCornerShape(12.dp))
+                .background(GlassColor)
+                .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
+                .blur(radius = 16.dp)
         )
-        ColumnDivider(height = 42.dp)
-        ActionTile(
-            label = "КВЕСТЫ",
-            icon = MainIconType.Clipboard,
-            onClick = onQuestsClick,
-            modifier = Modifier.weight(1f),
-        )
-        ColumnDivider(height = 42.dp)
-        ActionTile(
-            label = "БОССЫ",
-            icon = MainIconType.Crown,
-            onClick = onBossesClick,
-            modifier = Modifier.weight(1f),
-        )
+
+        // Слой 2: Четкие интерактивные кнопки поверх размытия
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ActionTile(
+                label = "ИНВЕНТАРЬ",
+                icon = MainIconType.Backpack,
+                onClick = onInventoryClick,
+                modifier = Modifier.weight(1f),
+            )
+
+            ColumnDivider(height = 24.dp) // Уменьшили высоту разделителя до 24.dp для аккуратного вида
+
+            ActionTile(
+                label = "КВЕСТЫ",
+                icon = MainIconType.Clipboard,
+                onClick = onQuestsClick,
+                modifier = Modifier.weight(1f),
+            )
+
+            ColumnDivider(height = 24.dp)
+
+            ActionTile(
+                label = "БОССЫ",
+                icon = MainIconType.Crown,
+                onClick = onBossesClick,
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 }
+
 
 @Composable
 private fun ActionTile(
@@ -604,29 +734,52 @@ private fun ColumnDivider(height: Dp) {
 
 @Composable
 private fun StartTrainingButton(onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(52.dp),
-        shape = RoundedCornerShape(26.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Accent,
-            contentColor = DarkOnAccent,
-        ),
+    Box(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        MainIcon(
-            type = MainIconType.Run,
-            tint = DarkOnAccent,
-            modifier = Modifier.size(22.dp),
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clip(RoundedCornerShape(26.dp))
+                .background(Color(0xFFFFFFFF).copy(alpha = 0.02f))
+                .border(1.dp, Color(0xFFFFFFFF).copy(alpha = 0.08f), RoundedCornerShape(26.dp))
+                .blur(radius = 8.dp)
         )
-        Spacer(Modifier.width(10.dp))
-        Text(
-            text = "НАЧАТЬ ТРЕНИРОВКУ",
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.5.sp,
-        )
+
+        Button(
+            onClick = onClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                contentColor = DarkOnAccent
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFFE2E74A),
+                            Color(0xFFB0B232)
+                        ),
+                        start = Offset(0f, 0f),
+                        end = Offset(0f, Float.POSITIVE_INFINITY)
+                    ),
+                    shape = RoundedCornerShape(26.dp)
+                ),
+        ) {
+            MainIcon(
+                type = MainIconType.Run,
+                tint = DarkOnAccent,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                text = "НАЧАТЬ ТРЕНИРОВКУ",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.5.sp,
+            )
+        }
     }
 }
 

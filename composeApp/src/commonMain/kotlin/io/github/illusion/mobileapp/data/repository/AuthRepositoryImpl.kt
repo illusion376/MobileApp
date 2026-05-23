@@ -13,21 +13,20 @@ import io.github.illusion.mobileapp.domain.model.RegisterStatus
 import io.github.illusion.mobileapp.domain.model.User
 import io.github.illusion.mobileapp.domain.model.VerificationStatus
 import io.github.illusion.mobileapp.domain.repository.AuthRepository
+import io.github.illusion.mobileapp.domain.repository.KSafeRepository
 import kotlinx.coroutines.flow.Flow
 
 class AuthRepositoryImpl(
     private val userApi: UserApi,
-    private val tokenStorage: TokenStorage
+    private val kSafeRepository: KSafeRepository
 ) : AuthRepository {
     override suspend fun login(email: String, password: String): Result<User> {
         return runCatching {
             val response = userApi.login(LoginRequestDTO(email, password))
 
-            val token = response.token ?: throw Exception("Token is missing")
-
             val user = response.toDomain()
 
-            tokenStorage.saveToken(token)
+            kSafeRepository.saveData("userId", user.userId)
             user
         }
     }

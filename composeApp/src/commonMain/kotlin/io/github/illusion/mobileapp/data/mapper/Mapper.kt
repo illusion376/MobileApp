@@ -8,13 +8,15 @@ import io.github.illusion.mobileapp.domain.model.User
 
 fun LoginResponseDTO.toDomain(): User {
     return User(
-        token = token ?: error("Token is missing")
+        token = token ?: error("Token is missing"),
+        userId = userId.toString()
     )
 }
 
 fun RegisterResponseDTO.toDomain(): User {
     return User(
-        token = token ?: error("Token is missing")
+        token = token ?: error("Token is missing"),
+        userId = userId.toString()
     )
 }
 
@@ -23,6 +25,7 @@ fun PlayerCharacterDTO.toDomain(): Player {
         userId = userId,
         level = level,
         experience = experience,
+        experienceToNextLevel = experienceToNextLevel,
         strength = strength,
         stamina = stamina,
         vitality = vitality,

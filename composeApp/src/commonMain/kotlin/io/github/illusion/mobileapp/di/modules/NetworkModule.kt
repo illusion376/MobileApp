@@ -12,8 +12,6 @@ import org.koin.dsl.module
 
 val networkModule = module {
     single {
-        val tokenStorage: TokenStorage = get()
-
         HttpClient {
             install(SSE)
             install(ContentNegotiation) {
@@ -23,12 +21,6 @@ val networkModule = module {
                         isLenient = true
                     }
                 )
-            }
-
-            defaultRequest {
-                tokenStorage.getToken()?.let { token ->
-                    header("Authorization", "Bearer $token")
-                }
             }
         }
     }

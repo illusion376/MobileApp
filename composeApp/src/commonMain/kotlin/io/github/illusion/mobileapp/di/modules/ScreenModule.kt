@@ -4,8 +4,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.illusion.mobileapp.data.remote.api.PlayerApi
 import io.github.illusion.mobileapp.data.remote.api.UserApi
 import io.github.illusion.mobileapp.data.repository.AuthRepositoryImpl
+import io.github.illusion.mobileapp.data.repository.KSafeRepositoryImpl
 import io.github.illusion.mobileapp.data.repository.PlayerRepositoryImpl
 import io.github.illusion.mobileapp.domain.repository.AuthRepository
+import io.github.illusion.mobileapp.domain.repository.KSafeRepository
 import io.github.illusion.mobileapp.domain.repository.PlayerRepository
 import io.github.illusion.mobileapp.domain.usecase.GetCharacterUseCase
 import io.github.illusion.mobileapp.domain.usecase.LoginUserUseCase
@@ -45,6 +47,6 @@ val screenModule = module {
     }
 
     factory {
-        MainViewModel(get())
+        MainViewModel(get(),get())
     }
 }

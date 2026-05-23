@@ -2,6 +2,7 @@ package io.github.illusion.mobileapp.ui.screens.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.illusion.mobileapp.domain.repository.KSafeRepository
 import io.github.illusion.mobileapp.domain.usecase.LoginUserUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,7 +11,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.math.log
 
-class LoginViewModel(private val loginUserUseCase: LoginUserUseCase) : ViewModel() {
+class LoginViewModel(private val loginUserUseCase: LoginUserUseCase) :
+    ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUIState())
     val uiState: StateFlow<LoginUIState> = _uiState.asStateFlow()
@@ -56,7 +58,7 @@ class LoginViewModel(private val loginUserUseCase: LoginUserUseCase) : ViewModel
                 .onSuccess {
                     onSuccess()
                 }
-                .onFailure{
+                .onFailure {
                     _uiState.update { it.copy(errorMessage = "Неверный логин или пароль") }
                 }
         }
