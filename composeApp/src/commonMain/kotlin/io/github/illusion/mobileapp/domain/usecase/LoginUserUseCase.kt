@@ -2,6 +2,7 @@
 
 import io.github.illusion.mobileapp.domain.model.User
 import io.github.illusion.mobileapp.domain.repository.AuthRepository
+import io.github.illusion.mobileapp.domain.repository.KSafeRepository
 
 class LoginUserUseCase(
     private val repository: AuthRepository

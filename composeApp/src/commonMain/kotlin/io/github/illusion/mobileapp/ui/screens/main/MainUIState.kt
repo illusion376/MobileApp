@@ -28,11 +28,13 @@ data class MainUIState(
         fun fromCharacter(player : Player): MainUIState {
             return MainUIState(
                 level = player.level,
-                nextLevel = player.level + 1,
+                nextLevel = player.level,
+                xpToNextLevel = player.experienceToNextLevel,
                 currentXp = player.experience,
                 todaySteps = player.steps,
                 stats = PlayerStats(player.strength, player.vitality, player.stamina),
-                streakDays = player.streakDays
+                streakDays = player.streakDays,
+                weeklyStreakDone = loadStreakDays(player.streakDays)
             )
         }
     }
@@ -64,3 +66,13 @@ data class PlayerStats(
 
 private fun safeFraction(current: Int, target: Int): Float =
     if (target <= 0) 0f else (current.toFloat() / target.toFloat()).coerceIn(0f, 1f)
+
+private fun loadStreakDays(streakDays: Int): List<Boolean> {
+    val list = mutableListOf(false, false, false, false, false, false, false)
+
+    for (i in 0 until (streakDays % 7)) {
+        list[i] = true
+    }
+
+    return list
+}

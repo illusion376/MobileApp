@@ -7,7 +7,7 @@ import io.github.illusion.mobileapp.domain.model.Player
 import io.github.illusion.mobileapp.domain.repository.PlayerRepository
 
 class PlayerRepositoryImpl(private val playerApi: PlayerApi) : PlayerRepository{
-    override suspend fun getPlayer(userId: Int): Result<Player> {
+    override suspend fun getPlayer(userId: String): Result<Player> {
         return runCatching {
             val response = playerApi.getPlayer(userId)
 

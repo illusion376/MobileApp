@@ -4,5 +4,5 @@ import io.github.illusion.mobileapp.domain.model.Player
 import io.github.illusion.mobileapp.domain.model.User
 
 interface PlayerRepository {
-    suspend fun getPlayer(userId : Int): Result<Player>
+    suspend fun getPlayer(userId : String): Result<Player>
 }

@@ -7,6 +7,7 @@ data class PlayerCharacterDTO(
     val userId: Int,
     val level: Int,
     val experience: Int,
+    val experienceToNextLevel : Int,
     val strength: Int,
     val stamina: Int,
     val vitality: Int,
