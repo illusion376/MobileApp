@@ -32,13 +32,12 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
-import mobileapp.composeapp.generated.resources.Res
-import mobileapp.composeapp.generated.resources.ic_email
-import mobileapp.composeapp.generated.resources.ic_lock
-import mobileapp.composeapp.generated.resources.ic_user
+import io.github.illusion.mobileapp.resources.Res
+import io.github.illusion.mobileapp.resources.ic_email
+import io.github.illusion.mobileapp.resources.ic_lock
+import io.github.illusion.mobileapp.resources.ic_user
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 

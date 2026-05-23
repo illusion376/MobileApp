@@ -26,8 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import mobileapp.composeapp.generated.resources.Res
-import mobileapp.composeapp.generated.resources.ic_email
+import io.github.illusion.mobileapp.resources.Res
+import io.github.illusion.mobileapp.resources.ic_email
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 

@@ -1,144 +1,660 @@
 package io.github.illusion.mobileapp.ui.screens.main
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import mobileapp.composeapp.generated.resources.Res
-import mobileapp.composeapp.generated.resources.ic_user
-import org.jetbrains.compose.resources.painterResource
+import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.compose.koinInject
+
+private val BgDark = Color(0xFF2A2A21)
+private val SurfaceCard = Color(0xFF3A3A2E)
+private val TrackColor = Color(0xFF4A4A38)
+private val Accent = Color(0xFFC5C744)
+private val AccentDim = Color(0xFF45453A)
+private val TextPrimary = Color(0xFFEDEDE0)
+private val TextSecondary = Color(0xFF9D9D86)
+private val DividerColor = Color(0xFF5A5A48)
+private val DarkOnAccent = Color(0xFF1F1F17)
 
 @Composable
 fun MainScreen(
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: MainViewModel = koinInject(),
 ) {
-    Box(
-        modifier = Modifier
+    val state by viewModel.uiState.collectAsState()
+    val logout = remember(onLogout) { onLogout }
+
+    MainContent(
+        state = state,
+        onDismissError = viewModel::dismissError,
+        onInventoryClick = viewModel::onInventoryClick,
+        onQuestsClick = viewModel::onQuestsClick,
+        onBossesClick = viewModel::onBossesClick,
+        onStartTrainingClick = viewModel::onStartTrainingClick,
+        onLogoutClick = logout,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun MainContent(
+    state: MainUIState,
+    onDismissError: () -> Unit,
+    onInventoryClick: () -> Unit,
+    onQuestsClick: () -> Unit,
+    onBossesClick: () -> Unit,
+    onStartTrainingClick: () -> Unit,
+    onLogoutClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF333329),
-                        Color(0xFF1E1E18)
-                    )
-                )
-            )
+            .background(BgDark)
+            .padding(horizontal = 14.dp)
+            .padding(top = 8.dp, bottom = 16.dp),
     ) {
-        Column(
+        TopBar(onLogoutClick = onLogoutClick)
+
+        state.errorMessage?.let { msg ->
+            Spacer(Modifier.height(8.dp))
+            ErrorBannerMain(message = msg, onDismiss = onDismissError)
+        }
+
+        Spacer(Modifier.height(4.dp))
+        TopStatsRow(
+            steps = state.todaySteps,
+            calories = state.caloriesBurned,
+            minutes = state.walkMinutes,
+        )
+        Spacer(Modifier.height(10.dp))
+
+        DisciplineCard(
+            title = state.disciplineTitle,
+            subtitle = state.disciplineSubtitle,
+        )
+        Spacer(Modifier.height(8.dp))
+
+        NextLevelCard(
+            nextLevel = state.nextLevel,
+            currentXp = state.currentXp,
+            xpToNext = state.xpToNextLevel,
+            progress = state.xpProgress,
+        )
+        Spacer(Modifier.height(8.dp))
+
+        StreakCard(
+            days = state.weeklyStreakDone,
+            currentIndex = state.currentWeekdayIndex,
+            streakDays = state.streakDays,
+        )
+        Spacer(Modifier.height(8.dp))
+
+        StatsCard(stats = state.stats)
+        Spacer(Modifier.height(8.dp))
+
+        ActionsRow(
+            onInventoryClick = onInventoryClick,
+            onQuestsClick = onQuestsClick,
+            onBossesClick = onBossesClick,
+        )
+        Spacer(Modifier.weight(1f, fill = true).heightIn(min = 10.dp))
+
+        StartTrainingButton(onClick = onStartTrainingClick)
+    }
+}
+
+@Composable
+private fun TopBar(onLogoutClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Spacer(Modifier.weight(1f))
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 41.dp, vertical = 60.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(SurfaceCard)
+                .clickable(onClick = onLogoutClick),
+            contentAlignment = Alignment.Center,
         ) {
-            // Шапка с логотипом и кнопкой выхода
-            Box(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "LOGO",
-                    color = Color(0xFFDBDBDB),
-                    style = MaterialTheme.typography.headlineLarge,
-                    modifier = Modifier.align(Alignment.CenterStart)
-                )
-
-                Text(
-                    text = "Выйти",
-                    color = Color(0xFFC6C247),
-                    fontSize = 14.sp,
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .clickable { onLogout() }
-                        .padding(8.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(60.dp))
-
-            // Приветствие
-            Text(
-                text = "Добро пожаловать!",
-                color = Color(0xFFDBDBDB),
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Иконка пользователя
-            Icon(
-                painter = painterResource(Res.drawable.ic_user),
-                contentDescription = "user",
-                tint = Color(0xFFC6C247),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 100.dp)
-                    .clip(RoundedCornerShape(100.dp))
-                    .background(Color(0xFF4D4B3D))
-                    .padding(40.dp)
-            )
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Карточка с информацией
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFF4D4B3D))
-                    .padding(24.dp)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Аккаунт подтвержден ✅",
-                        color = Color(0xFF4CAF50),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "Вы успешно прошли верификацию email!",
-                        color = Color(0xFFDBDBDB),
-                        fontSize = 14.sp,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(60.dp))
-
-            // Декоративный текст
-            Text(
-                text = "Движение вперёд с осознанием ответственности перед людьми и природой.",
-                color = Color(0xFF999999),
-                fontSize = 12.sp,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 16.dp)
+            MainIcon(
+                type = MainIconType.Close,
+                tint = TextSecondary,
+                modifier = Modifier.size(14.dp),
             )
         }
     }
+}
+
+@Composable
+private fun TopStatsRow(steps: Int, calories: Int, minutes: Int) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(50))
+            .background(SurfaceCard)
+            .padding(vertical = 12.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        MiniStat(
+            icon = MainIconType.Boot,
+            value = steps.toString(),
+            label = "ШАГОВ",
+            modifier = Modifier.weight(1f),
+        )
+        ColumnDivider(height = 28.dp)
+        MiniStat(
+            icon = MainIconType.Fire,
+            value = calories.toString(),
+            label = "ККАЛ",
+            modifier = Modifier.weight(1f),
+        )
+        ColumnDivider(height = 28.dp)
+        MiniStat(
+            icon = MainIconType.Clock,
+            value = minutes.toString(),
+            label = "МИН",
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun MiniStat(
+    icon: MainIconType,
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.padding(horizontal = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        MainIcon(
+            type = icon,
+            tint = Accent,
+            modifier = Modifier.size(20.dp),
+        )
+        Spacer(Modifier.width(6.dp))
+        Column {
+            Text(
+                text = value,
+                color = TextPrimary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                lineHeight = 18.sp,
+            )
+            Text(
+                text = label,
+                color = TextSecondary,
+                fontSize = 9.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 1.sp,
+                lineHeight = 10.sp,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DisciplineCard(
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(SurfaceCard)
+            .padding(14.dp),
+    ) {
+        Text(
+            text = "ТВОЙ ПРОГРЕСС СЕГОДНЯ",
+            color = TextPrimary,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.5.sp,
+        )
+        Spacer(Modifier.height(10.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            MainIcon(
+                type = MainIconType.Emblem,
+                tint = Accent,
+                modifier = Modifier.size(120.dp),
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    color = TextPrimary,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.5.sp,
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = subtitle,
+                    color = TextSecondary,
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NextLevelCard(
+    nextLevel: Int,
+    currentXp: Int,
+    xpToNext: Int,
+    progress: Float,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(SurfaceCard)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "ДО СЛЕДУЮЩЕГО УРОВНЯ",
+                color = TextPrimary,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp,
+            )
+            Spacer(Modifier.weight(1f))
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(Accent)
+                    .padding(horizontal = 8.dp, vertical = 3.dp),
+            ) {
+                Text(
+                    text = "LEVEL $nextLevel",
+                    color = DarkOnAccent,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp,
+                )
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            Text(
+                text = formatNumber(currentXp),
+                color = Accent,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = " / ${formatNumber(xpToNext)} XP",
+                color = TextSecondary,
+                fontSize = 12.sp,
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+        ThinProgress(progress = progress)
+    }
+}
+
+@Composable
+private fun StreakCard(
+    days: List<Boolean>,
+    currentIndex: Int,
+    streakDays: Int,
+) {
+    val labels = listOf("ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС")
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(SurfaceCard)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+    ) {
+        Text(
+            text = "ТВОЯ СЕРИЯ",
+            color = TextPrimary,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp,
+        )
+        Spacer(Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            labels.forEachIndexed { idx, label ->
+                StreakDay(
+                    label = label,
+                    isCompleted = days.getOrNull(idx) == true,
+                    isCurrent = idx == currentIndex,
+                )
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "$streakDays дней подряд! Продолжай!",
+            color = Accent,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun StreakDay(label: String, isCompleted: Boolean, isCurrent: Boolean) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = label,
+            color = TextSecondary,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = 0.5.sp,
+        )
+        Spacer(Modifier.height(4.dp))
+
+        Box(
+            modifier = Modifier
+                .size(30.dp)
+                .clip(CircleShape)
+                .background(AccentDim)
+                .then(
+                    if (isCurrent) Modifier.border(1.5.dp, Accent, CircleShape) else Modifier
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            when {
+                isCompleted -> CheckMark(
+                    color = Accent,
+                    modifier = Modifier.size(16.dp),
+                )
+                isCurrent -> Box(
+                    modifier = Modifier
+                        .size(7.dp)
+                        .clip(CircleShape)
+                        .background(Accent),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CheckMark(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val u = minOf(size.width, size.height) / 24f
+        val w = 2.6f * u
+        drawLine(
+            color = color,
+            start = Offset(5f * u, 12.5f * u),
+            end = Offset(10.5f * u, 17.5f * u),
+            strokeWidth = w,
+            cap = StrokeCap.Round,
+        )
+        drawLine(
+            color = color,
+            start = Offset(10.5f * u, 17.5f * u),
+            end = Offset(19f * u, 7.5f * u),
+            strokeWidth = w,
+            cap = StrokeCap.Round,
+        )
+    }
+}
+
+@Composable
+private fun StatsCard(stats: PlayerStats) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(SurfaceCard)
+            .padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        StatItem(
+            icon = MainIconType.Sword,
+            label = "СТР",
+            value = stats.strength,
+            modifier = Modifier.weight(1f),
+        )
+        ColumnDivider(height = 36.dp)
+        StatItem(
+            icon = MainIconType.Shield,
+            label = "ВИТ",
+            value = stats.vitality,
+            modifier = Modifier.weight(1f),
+        )
+        ColumnDivider(height = 36.dp)
+        StatItem(
+            icon = MainIconType.Sparkle,
+            label = "СТА",
+            value = stats.stamina,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun StatItem(
+    icon: MainIconType,
+    label: String,
+    value: Int,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        MainIcon(
+            type = icon,
+            tint = TextPrimary,
+            modifier = Modifier.size(24.dp),
+        )
+        Spacer(Modifier.width(8.dp))
+        Column {
+            Text(
+                text = label,
+                color = TextSecondary,
+                fontSize = 10.sp,
+                letterSpacing = 1.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = value.toString(),
+                color = TextPrimary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ActionsRow(
+    onInventoryClick: () -> Unit,
+    onQuestsClick: () -> Unit,
+    onBossesClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(SurfaceCard)
+            .padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ActionTile(
+            label = "ИНВЕНТАРЬ",
+            icon = MainIconType.Backpack,
+            onClick = onInventoryClick,
+            modifier = Modifier.weight(1f),
+        )
+        ColumnDivider(height = 42.dp)
+        ActionTile(
+            label = "КВЕСТЫ",
+            icon = MainIconType.Clipboard,
+            onClick = onQuestsClick,
+            modifier = Modifier.weight(1f),
+        )
+        ColumnDivider(height = 42.dp)
+        ActionTile(
+            label = "БОССЫ",
+            icon = MainIconType.Crown,
+            onClick = onBossesClick,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun ActionTile(
+    label: String,
+    icon: MainIconType,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .padding(vertical = 2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        MainIcon(
+            type = icon,
+            tint = TextPrimary,
+            modifier = Modifier.size(26.dp),
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = label,
+            color = TextPrimary,
+            fontSize = 10.sp,
+            letterSpacing = 1.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
+    }
+}
+
+@Composable
+private fun ColumnDivider(height: Dp) {
+    Box(
+        modifier = Modifier
+            .width(1.dp)
+            .height(height)
+            .background(DividerColor),
+    )
+}
+
+@Composable
+private fun StartTrainingButton(onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp),
+        shape = RoundedCornerShape(26.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Accent,
+            contentColor = DarkOnAccent,
+        ),
+    ) {
+        MainIcon(
+            type = MainIconType.Run,
+            tint = DarkOnAccent,
+            modifier = Modifier.size(22.dp),
+        )
+        Spacer(Modifier.width(10.dp))
+        Text(
+            text = "НАЧАТЬ ТРЕНИРОВКУ",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.5.sp,
+        )
+    }
+}
+
+@Composable
+private fun ThinProgress(progress: Float) {
+    LinearProgressIndicator(
+        progress = { progress },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(6.dp)
+            .clip(RoundedCornerShape(50)),
+        color = Accent,
+        trackColor = TrackColor,
+        strokeCap = StrokeCap.Round,
+        gapSize = 0.dp,
+        drawStopIndicator = {},
+    )
+}
+
+private fun formatNumber(value: Int): String {
+    if (value < 1_000) return value.toString()
+    val s = value.toString()
+    val sb = StringBuilder(s.length + s.length / 3)
+    var count = 0
+    for (i in s.indices.reversed()) {
+        sb.append(s[i])
+        count++
+        if (count % 3 == 0 && i != 0) sb.append(',')
+    }
+    return sb.reverse().toString()
 }

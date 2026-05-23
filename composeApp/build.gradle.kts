@@ -1,4 +1,3 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -9,13 +8,18 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+compose.resources {
+    publicResClass    = true
+    packageOfResClass = "io.github.illusion.mobileapp.resources"
+}
+
 kotlin {
     androidTarget {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
+
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -25,36 +29,42 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
         }
+
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
         }
+
         commonMain.dependencies {
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
             implementation(libs.compose.ui)
+            implementation(libs.compose.icons)
             implementation(libs.compose.components.resources)
             implementation(libs.compose.uiToolingPreview)
-            implementation(libs.androidx.lifecycle.viewmodelCompose)
+
+            implementation(libs.androidx.lifecycle.viewmodelCompose) // Дубликат удален
             implementation(libs.androidx.lifecycle.runtimeCompose)
+
             implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.client.content.negotiation) // Дубликат удален
             implementation(libs.ktor.serialization.kotlinx.json)
-            implementation(libs.ktor.serialization.kotlinx.json)
+
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
+            implementation(libs.ksafe.core)
+            implementation(libs.ksafe.compose)
             implementation(libs.russhwolf)
-            implementation(libs.androidx.lifecycle.viewmodelCompose)
-
         }
+
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
@@ -72,16 +82,19 @@ android {
         versionCode = 1
         versionName = "1.0"
     }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -91,4 +104,3 @@ android {
 dependencies {
     debugImplementation(libs.compose.uiTooling)
 }
-
