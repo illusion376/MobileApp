@@ -25,7 +25,7 @@ fun NavigationGraph() {
         is Screen.Login -> {
             LoginScreen(
                 onNavigateToRegister = { currentScreen = Screen.Register },
-                onNavigateToMain = { currentScreen = Screen.Main }  // TODO: После успешного входа
+                onNavigateToMain = { currentScreen = Screen.Main }
             )
         }
         is Screen.Register -> {
@@ -40,7 +40,7 @@ fun NavigationGraph() {
             VerificationScreen(
                 email = (currentScreen as Screen.Verification).email,
                 onVerificationComplete = {
-                    currentScreen = Screen.Main  // TODO: После подтверждения email
+                    currentScreen = Screen.Main
                 },
                 onBackToLogin = { currentScreen = Screen.Login }
             )
