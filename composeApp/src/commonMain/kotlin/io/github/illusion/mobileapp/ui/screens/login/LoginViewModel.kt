@@ -9,10 +9,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.math.log
 
-class LoginViewModel(private val loginUserUseCase: LoginUserUseCase) :
-    ViewModel() {
+class LoginViewModel(
+    private val loginUserUseCase: LoginUserUseCase,
+    private val kSafeRepository: KSafeRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUIState())
     val uiState: StateFlow<LoginUIState> = _uiState.asStateFlow()
@@ -56,10 +57,15 @@ class LoginViewModel(private val loginUserUseCase: LoginUserUseCase) :
 
             loginUserUseCase(email, password)
                 .onSuccess {
+                    if (_uiState.value.isRememberMe) {
+                        kSafeRepository.saveData("remember_me", "true")
+                    } else {
+                        kSafeRepository.saveData("remember_me", "false")
+                    }
                     onSuccess()
                 }
-                .onFailure {
-                    _uiState.update { it.copy(errorMessage = "Неверный логин или пароль") }
+                .onFailure { error ->
+                    _uiState.update { it.copy(errorMessage = error.message ?: "Неизвестная ошибка") }
                 }
         }
     }

@@ -29,6 +29,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -41,6 +42,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -61,8 +63,6 @@ private val DarkOnAccent = Color(0xFF1B1B15) // Темный цвет текст
 private val ButtonGradientStart = Color(0xFFE2E74A) // Яркий лимонный (верх кнопки)
 private val ButtonGradientEnd = Color(0xFFB0B232)   // Приглушенный оливково-желтый (низ кнопк
 val GlassColor = Color(0xFFFFFFFF).copy(alpha = 0.03f)
-
-// 2. Граница «стекла», чтобы подчеркнуть форму
 val GlassBorder = Color(0xFFFFFFFF).copy(alpha = 0.06f)
 
 @Composable
@@ -101,9 +101,12 @@ private fun MainContent(
     onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val pullToRefreshState = rememberPullToRefreshState()
+
     PullToRefreshBox(
         isRefreshing = state.isLoading,
         onRefresh = onRefresh,
+        state = pullToRefreshState,
         modifier = modifier
             .fillMaxSize()
             .background(BgDark),
@@ -111,6 +114,9 @@ private fun MainContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .graphicsLayer {
+                    translationY = pullToRefreshState.distanceFraction * 200f
+                }
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 14.dp)
                 .padding(top = 8.dp, bottom = 16.dp),
@@ -241,34 +247,39 @@ private fun MiniStat(
     label: String,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.padding(horizontal = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        MainIcon(
-            type = icon,
-            tint = Accent,
-            modifier = Modifier.size(20.dp),
-        )
-        Spacer(Modifier.width(6.dp))
-        Column {
-            Text(
-                text = value,
-                color = TextPrimary,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                lineHeight = 18.sp,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            MainIcon(
+                type = icon,
+                tint = TextSecondary,
+                modifier = Modifier.size(16.dp),
             )
+            Spacer(Modifier.width(6.dp))
             Text(
                 text = label,
                 color = TextSecondary,
-                fontSize = 9.sp,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 1.sp,
-                lineHeight = 10.sp,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp,
             )
         }
+
+        Spacer(Modifier.height(4.dp))
+
+        Text(
+            text = value,
+            color = TextPrimary,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            lineHeight = 20.sp,
+        )
     }
 }
 
@@ -608,18 +619,21 @@ private fun StatItem(
     value: Int,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    Column(
         modifier = modifier,
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        MainIcon(
-            type = icon,
-            tint = TextSecondary,
-            modifier = Modifier.size(18.dp),
-        )
-        Spacer(Modifier.width(8.dp))
-        Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            MainIcon(
+                type = icon,
+                tint = TextSecondary,
+                modifier = Modifier.size(16.dp),
+            )
+            Spacer(Modifier.width(6.dp))
             Text(
                 text = label,
                 color = TextSecondary,
@@ -627,13 +641,16 @@ private fun StatItem(
                 letterSpacing = 1.sp,
                 fontWeight = FontWeight.SemiBold,
             )
-            Text(
-                text = value.toString(),
-                color = TextPrimary,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-            )
         }
+
+        Spacer(Modifier.height(4.dp))
+
+        Text(
+            text = value.toString(),
+            color = TextPrimary,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+        )
     }
 }
 

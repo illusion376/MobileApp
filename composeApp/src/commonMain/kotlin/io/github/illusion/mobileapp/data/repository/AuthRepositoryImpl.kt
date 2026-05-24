@@ -24,13 +24,17 @@ class AuthRepositoryImpl(
         return runCatching {
             val response = userApi.login(LoginRequestDTO(email, password))
 
+            if (response.status != 200) {
+                throw Exception(response.message)
+            }
+
             val user = response.toDomain()
 
             kSafeRepository.saveData("userId", user.userId)
+            kSafeRepository.saveData("token", user.token)
             user
         }
     }
-
     override suspend fun register(
         email: String,
         login: String,
@@ -39,9 +43,9 @@ class AuthRepositoryImpl(
         val response = userApi.register(RegisterRequestDTO(email, login, password))
         val status = response.status
 
-        if(status == 201){
+        if (status == 201) {
             RegisterStatus(status)
-        }else{
+        } else {
             throw Exception("Register failed")
         }
     }
