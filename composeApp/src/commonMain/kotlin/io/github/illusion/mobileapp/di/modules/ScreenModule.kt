@@ -35,7 +35,7 @@ val screenModule = module {
     factoryOf(::GetCharacterUseCase)
 
     factory {
-        LoginViewModel(get())
+        LoginViewModel(get(), get())
     }
 
     factory {

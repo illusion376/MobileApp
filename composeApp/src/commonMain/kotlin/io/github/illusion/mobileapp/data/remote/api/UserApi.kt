@@ -10,13 +10,14 @@ import io.github.illusion.mobileapp.data.remote.dto.VerificationResponseDTO
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.sse.sse
-import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 
 class UserApi(private val httpClient: HttpClient) {
     suspend fun login(requestDTO: LoginRequestDTO): LoginResponseDTO {
@@ -33,34 +34,41 @@ class UserApi(private val httpClient: HttpClient) {
         }.body()
     }
 
-    fun verification(requestDTO: VerificationRequestDTO): Flow<Result<VerificationResponseDTO>> = flow {
-        val result = runCatching {
-            httpClient.sse(
-                urlString = "${HttpString.URL}/auth/status/stream",
-                request = {
-                    url {
-                        parameters.append("email", requestDTO.email)
-                    }
-                }
-            ) {
-                incoming.collect { event ->
-                    when (event.event) {
-                        "verified" -> {
-                            emit(Result.success(VerificationResponseDTO(isVerified = true)))
-                            return@collect
-                        }
-
-                        "pending" -> {
-                            emit(Result.success(VerificationResponseDTO(isVerified = false)))
-                        }
-                        "error" -> {
-                            emit(Result.failure(Exception(event.data)))
-                            return@collect
+    fun verification(requestDTO: VerificationRequestDTO): Flow<Result<VerificationResponseDTO>> = callbackFlow {
+        launch {
+            try {
+                httpClient.sse(
+                    urlString = "${HttpString.URL}/auth/status/stream",
+                    request = {
+                        url {
+                            parameters.append("email", requestDTO.email)
                         }
                     }
+                ) {
+                    incoming.collect { event ->
+                        when (event.event) {
+                            "verified" -> {
+                                trySend(Result.success(VerificationResponseDTO(isVerified = true)))
+                                close()
+                                return@collect
+                            }
+                            "pending" -> {
+                                trySend(Result.success(VerificationResponseDTO(isVerified = false)))
+                            }
+                            "error" -> {
+                                trySend(Result.failure(Exception(event.data)))
+                                close()
+                                return@collect
+                            }
+                        }
+                    }
                 }
+                close()
+            } catch (e: Exception) {
+                trySend(Result.failure(e))
+                close()
             }
         }
-        result.onFailure { emit(Result.failure(it)) }
+        awaitClose()
     }
 }
