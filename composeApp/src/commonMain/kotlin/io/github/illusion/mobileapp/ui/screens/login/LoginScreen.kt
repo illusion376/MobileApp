@@ -36,6 +36,7 @@ import org.jetbrains.compose.resources.painterResource
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.unit.sp
+import io.github.illusion.mobileapp.ui.screens.themes.scaledSp
 import io.github.illusion.mobileapp.resources.Res
 import io.github.illusion.mobileapp.resources.ic_lock
 import io.github.illusion.mobileapp.resources.ic_user
@@ -132,7 +133,7 @@ fun TopSection() {
         Text(
             text = "Движение вперёд с осознанием ответственности перед людьми и природой.",
             color = Color(0xFF999999),
-            style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp)
+            style = MaterialTheme.typography.bodyLarge.copy(lineHeight = scaledSp(24))
         )
     }
 }

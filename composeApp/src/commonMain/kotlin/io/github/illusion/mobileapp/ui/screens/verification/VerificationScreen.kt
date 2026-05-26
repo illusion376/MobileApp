@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.illusion.mobileapp.ui.screens.themes.scaledSp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.illusion.mobileapp.resources.Res
@@ -104,7 +105,7 @@ fun VerificationContent(
         Text(
             text = "ПОДТВЕРДИТЕ EMAIL",
             color = Color(0xFFDBDBDB),
-            fontSize = 24.sp,
+            fontSize = scaledSp(24),
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             letterSpacing = 1.sp,
@@ -117,7 +118,7 @@ fun VerificationContent(
         Text(
             text = "Мы отправили письмо со ссылкой для подтверждения на адрес",
             color = Color(0xFF999999),
-            fontSize = 16.sp,
+            fontSize = scaledSp(16),
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
@@ -130,7 +131,7 @@ fun VerificationContent(
         Text(
             text = uiState.email,
             color = Color(0xFFC6C247),
-            fontSize = 18.sp,
+            fontSize = scaledSp(18),
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center,
             modifier = Modifier
@@ -144,7 +145,7 @@ fun VerificationContent(
         Text(
             text = "После подтверждения вы будете автоматически перенаправлены в приложение",
             color = Color(0xFF7D7D69),
-            fontSize = 14.sp,
+            fontSize = scaledSp(14),
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
@@ -157,7 +158,7 @@ fun VerificationContent(
         Text(
             text = "Отправить письмо повторно",
             color = Color(0xFFC6C247),
-            fontSize = 16.sp,
+            fontSize = scaledSp(16),
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center,
             modifier = Modifier
@@ -172,7 +173,7 @@ fun VerificationContent(
         Text(
             text = "Вернуться ко входу",
             color = Color(0xFF807F66),
-            fontSize = 14.sp,
+            fontSize = scaledSp(14),
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
@@ -185,7 +186,7 @@ fun VerificationContent(
         Text(
             text = "Ожидаем подтверждения...",
             color = Color(0xFF7D7D69),
-            fontSize = 14.sp,
+            fontSize = scaledSp(14),
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )

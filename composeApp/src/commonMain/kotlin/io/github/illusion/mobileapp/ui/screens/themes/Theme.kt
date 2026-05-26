@@ -4,9 +4,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 
 @Composable
-fun AppTheme(content: @Composable () -> Unit) {
+fun AppTheme(fontScale: Float = 1f, content: @Composable () -> Unit) {
     MaterialTheme(
-        typography = appTypography(),
+        typography = appTypography(fontScale),
         content = content
     )
 }
