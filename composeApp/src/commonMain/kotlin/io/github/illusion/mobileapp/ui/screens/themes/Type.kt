@@ -7,32 +7,32 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun appTypography() = Typography(
+fun appTypography(fontScale: Float = 1f) = Typography(
 
     headlineLarge = TextStyle(
         fontFamily = interFont(),
         fontWeight = FontWeight.Bold,
-        fontSize = 64.sp,
-        lineHeight = 36.sp
+        fontSize = (64 * fontScale).sp,
+        lineHeight = (36 * fontScale).sp
     ),
 
     bodyLarge = TextStyle(
         fontFamily = interFont(),
         fontWeight = FontWeight.Normal,
-        fontSize = 20.sp,
-        lineHeight = 20.sp
+        fontSize = (20 * fontScale).sp,
+        lineHeight = (20 * fontScale).sp
     ),
 
     bodyMedium = TextStyle(
         fontFamily = interFont(),
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 18.sp
+        fontSize = (16 * fontScale).sp,
+        lineHeight = (18 * fontScale).sp
     ),
 
     labelLarge = TextStyle(
         fontFamily = interFont(),
         fontWeight = FontWeight.Bold,
-        fontSize = 24.sp
+        fontSize = (24 * fontScale).sp
     )
 )

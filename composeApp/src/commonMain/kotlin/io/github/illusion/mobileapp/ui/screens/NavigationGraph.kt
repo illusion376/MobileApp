@@ -5,32 +5,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import io.github.illusion.mobileapp.domain.repository.KSafeRepository
 import io.github.illusion.mobileapp.ui.screens.login.LoginScreen
 import io.github.illusion.mobileapp.ui.screens.main.MainScreen
 import io.github.illusion.mobileapp.ui.screens.register.RegisterScreen
+import io.github.illusion.mobileapp.ui.screens.training.TrainingScreen
 import io.github.illusion.mobileapp.ui.screens.verification.VerificationScreen
-import org.koin.compose.koinInject
 
 sealed class Screen {
     object Login : Screen()
     object Register : Screen()
     data class Verification(val email: String) : Screen()
     object Main : Screen()
+    object Training : Screen()
 }
 
 @Composable
 fun NavigationGraph() {
-    val kSafeRepository: KSafeRepository = koinInject()
-
-    val isRemembered = remember {
-        kSafeRepository.getDataOrNull("remember_me") == "true"
-                && !kSafeRepository.getDataOrNull("token").isNullOrBlank()
-    }
-
-    var currentScreen by remember {
-        mutableStateOf<Screen>(if (isRemembered) Screen.Main else Screen.Login)
-    }
+    var currentScreen by remember { mutableStateOf<Screen>(Screen.Login) }
 
     when (currentScreen) {
         is Screen.Login -> {
@@ -58,12 +49,13 @@ fun NavigationGraph() {
         }
         is Screen.Main -> {
             MainScreen(
-                onLogout = {
-                    kSafeRepository.saveData("remember_me", "false")
-                    kSafeRepository.saveData("token", "")
-                    kSafeRepository.saveData("userId", "")
-                    currentScreen = Screen.Login
-                }
+                onLogout = { currentScreen = Screen.Login },
+                onStartTraining = { currentScreen = Screen.Training }
+            )
+        }
+        is Screen.Training -> {
+            TrainingScreen(
+                onBack = { currentScreen = Screen.Main }
             )
         }
     }

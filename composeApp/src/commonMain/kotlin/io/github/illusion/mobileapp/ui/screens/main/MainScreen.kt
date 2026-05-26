@@ -29,7 +29,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -42,32 +41,34 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.illusion.mobileapp.ui.screens.themes.scaledSp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.koin.compose.koinInject
 
-private val BgDark = Color(0xFF1B1B15)       // Темный фон приложения (как на экране авторизации)
-private val SurfaceCard = Color(0xFF2E2D24)  // Фон для карточек и полей ввода
-private val TrackColor = Color(0xFF2B2A21)   // Цвет незаполненных элементов / неактивной кнопки
-private val Accent = Color(0xFFBBBD3D)       // Более мягкий, приглушенный желтый цвет
-private val AccentDim = Color(0xFF535246)    // Темный оттенок для неактивного текста на кнопке
-private val TextPrimary = Color(0xFFEDEDE0)  // Яркий белый текст (для LOGO)
-private val TextSecondary = Color(0xFF7E7D73)// Серый текст для подписей и описания
-private val DividerColor = Color(0xFFFFFFFF).copy(alpha = 0.07f) // Цвет разделителей в тон карточек
-private val DarkOnAccent = Color(0xFF1B1B15) // Темный цвет текста для контраста на желтом фоне
-private val ButtonGradientStart = Color(0xFFE2E74A) // Яркий лимонный (верх кнопки)
-private val ButtonGradientEnd = Color(0xFFB0B232)   // Приглушенный оливково-желтый (низ кнопк
-val GlassColor = Color(0xFFFFFFFF).copy(alpha = 0.03f)
-val GlassBorder = Color(0xFFFFFFFF).copy(alpha = 0.06f)
+private val BgDark = Color(0xFF1B1B15)
+private val SurfaceCard = Color(0xFF2E2D24)
+private val TrackColor = Color(0xFF2B2A21)
+private val Accent = Color(0xFFE2D566)
+private val AccentDim = Color(0xFFAD9B2A)
+private val TextPrimary = Color(0xFFDBDBDB)
+private val TextSecondary = Color(0xFF999999)
+private val TextDim = Color(0xFF7D7D69)
+private val DividerColor = Color(0xFFFFFFFF).copy(alpha = 0.07f)
+private val DarkOnAccent = Color(0xFF1B1B15)
+private val ButtonGradientStart = Color(0xFFE2D566)
+private val ButtonGradientEnd = Color(0xFFAD9B2A)
+private val GlassColor = Color(0xFF2E2D24).copy(alpha = 0.90f)
+private val GlassBorder = Color(0xFFFFFFFF).copy(alpha = 0.12f)
 
 @Composable
 fun MainScreen(
     onLogout: () -> Unit,
+    onStartTraining: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: MainViewModel = koinInject(),
 ) {
@@ -81,7 +82,7 @@ fun MainScreen(
         onInventoryClick = viewModel::onInventoryClick,
         onQuestsClick = viewModel::onQuestsClick,
         onBossesClick = viewModel::onBossesClick,
-        onStartTrainingClick = viewModel::onStartTrainingClick,
+        onStartTrainingClick = onStartTraining,
         onLogoutClick = logout,
         modifier = modifier,
     )
@@ -101,12 +102,9 @@ private fun MainContent(
     onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val pullToRefreshState = rememberPullToRefreshState()
-
     PullToRefreshBox(
         isRefreshing = state.isLoading,
         onRefresh = onRefresh,
-        state = pullToRefreshState,
         modifier = modifier
             .fillMaxSize()
             .background(BgDark),
@@ -114,9 +112,6 @@ private fun MainContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer {
-                    translationY = pullToRefreshState.distanceFraction * 200f
-                }
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 14.dp)
                 .padding(top = 8.dp, bottom = 16.dp),
@@ -247,39 +242,34 @@ private fun MiniStat(
     label: String,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Row(
+        modifier = modifier.padding(horizontal = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            MainIcon(
-                type = icon,
-                tint = TextSecondary,
-                modifier = Modifier.size(16.dp),
+        MainIcon(
+            type = icon,
+            tint = Accent,
+            modifier = Modifier.size(20.dp),
+        )
+        Spacer(Modifier.width(6.dp))
+        Column {
+            Text(
+                text = value,
+                color = TextPrimary,
+                fontSize = scaledSp(16),
+                fontWeight = FontWeight.Bold,
+                lineHeight = scaledSp(18),
             )
-            Spacer(Modifier.width(6.dp))
             Text(
                 text = label,
                 color = TextSecondary,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp,
+                fontSize = scaledSp(9),
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 1.sp,
+                lineHeight = scaledSp(10),
             )
         }
-
-        Spacer(Modifier.height(4.dp))
-
-        Text(
-            text = value,
-            color = TextPrimary,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            lineHeight = 20.sp,
-        )
     }
 }
 
@@ -289,112 +279,58 @@ private fun DisciplineCard(
     subtitle: String,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(SurfaceCard)
-            .padding(14.dp),
+    Box(
+        modifier = modifier.fillMaxWidth()
     ) {
-        Text(
-            text = "ТВОЙ ПРОГРЕСС СЕГОДНЯ",
-            color = TextPrimary,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.5.sp,
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clip(RoundedCornerShape(14.dp))
+                .background(GlassColor)
+                .border(1.dp, GlassBorder, RoundedCornerShape(14.dp))
+                .blur(radius = 16.dp)
         )
-        Spacer(Modifier.height(10.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            Text(
+                text = "ТВОЙ ПРОГРЕСС СЕГОДНЯ",
+                color = TextPrimary,
+                fontSize = scaledSp(11),
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.5.sp,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(10.dp))
             MainIcon(
                 type = MainIconType.Emblem,
                 tint = Accent,
-                modifier = Modifier.size(120.dp),
+                modifier = Modifier.size(140.dp),
             )
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    color = TextPrimary,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.5.sp,
-                )
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = subtitle,
-                    color = TextSecondary,
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp,
-                )
-            }
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = title,
+                color = TextPrimary,
+                fontSize = scaledSp(16),
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = subtitle,
+                color = TextSecondary,
+                fontSize = scaledSp(12),
+                lineHeight = scaledSp(16),
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }
-
-//@Composable
-//private fun DisciplineCard(
-//    title: String,
-//    subtitle: String,
-//    modifier: Modifier = Modifier,
-//) {
-//    Box(
-//        modifier = modifier.fillMaxWidth()
-//    ) {
-//        Box(
-//            modifier = Modifier
-//                .matchParentSize()
-//                .clip(RoundedCornerShape(14.dp))
-//                .background(GlassColor)
-//                .border(1.dp, GlassBorder, RoundedCornerShape(14.dp))
-//                .blur(radius = 16.dp)
-//        )
-//
-//        Column(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(14.dp),
-//        ) {
-//            Text(
-//                text = "ТВОЙ ПРОГРЕСС СЕГОДНЯ",
-//                color = TextPrimary,
-//                fontSize = 11.sp,
-//                fontWeight = FontWeight.Bold,
-//                letterSpacing = 1.5.sp,
-//            )
-//            Spacer(Modifier.height(10.dp))
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
-//                verticalAlignment = Alignment.CenterVertically,
-//            ) {
-//                MainIcon(
-//                    type = MainIconType.Emblem,
-//                    tint = Accent,
-//                    modifier = Modifier.size(120.dp),
-//                )
-//                Spacer(Modifier.width(12.dp))
-//                Column(Modifier.weight(1f)) {
-//                    Text(
-//                        text = title,
-//                        color = TextPrimary,
-//                        fontSize = 16.sp,
-//                        fontWeight = FontWeight.Bold,
-//                        letterSpacing = 0.5.sp,
-//                    )
-//                    Spacer(Modifier.height(6.dp))
-//                    Text(
-//                        text = subtitle,
-//                        color = TextSecondary,
-//                        fontSize = 12.sp,
-//                        lineHeight = 16.sp,
-//                    )
-//                }
-//            }
-//        }
-//    }
-//}
 
 @Composable
 private fun NextLevelCard(
@@ -403,59 +339,68 @@ private fun NextLevelCard(
     xpToNext: Int,
     progress: Float,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(SurfaceCard)
-            .padding(horizontal = 14.dp, vertical = 10.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clip(RoundedCornerShape(12.dp))
+                .background(GlassColor)
+                .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
+                .blur(radius = 16.dp)
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 10.dp),
         ) {
-            Text(
-                text = "ДО СЛЕДУЮЩЕГО УРОВНЯ",
-                color = TextPrimary,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp,
-            )
-            Spacer(Modifier.weight(1f))
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(Accent)
-                    .padding(horizontal = 8.dp, vertical = 3.dp),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "LEVEL $nextLevel",
-                    color = DarkOnAccent,
-                    fontSize = 10.sp,
+                    text = "ДО СЛЕДУЮЩЕГО УРОВНЯ",
+                    color = TextPrimary,
+                    fontSize = scaledSp(12),
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp,
                 )
+                Spacer(Modifier.weight(1f))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Accent)
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                ) {
+                    Text(
+                        text = "LEVEL $nextLevel",
+                        color = DarkOnAccent,
+                        fontSize = scaledSp(10),
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp,
+                    )
+                }
             }
+            Spacer(Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                Text(
+                    text = formatNumber(currentXp),
+                    color = Accent,
+                    fontSize = scaledSp(12),
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = " / ${formatNumber(xpToNext)} XP",
+                    color = TextSecondary,
+                    fontSize = scaledSp(12),
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+            ThinProgress(progress = progress)
         }
-        Spacer(Modifier.height(6.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
-        ) {
-            Text(
-                text = formatNumber(currentXp),
-                color = Accent,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = " / ${formatNumber(xpToNext)} XP",
-                color = TextSecondary,
-                fontSize = 12.sp,
-            )
-        }
-        Spacer(Modifier.height(6.dp))
-        ThinProgress(progress = progress)
     }
 }
 
@@ -466,43 +411,52 @@ private fun StreakCard(
     streakDays: Int,
 ) {
     val labels = listOf("ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС")
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(SurfaceCard)
-            .padding(horizontal = 14.dp, vertical = 10.dp),
-    ) {
-        Text(
-            text = "ТВОЯ СЕРИЯ",
-            color = TextPrimary,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.sp,
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clip(RoundedCornerShape(12.dp))
+                .background(GlassColor)
+                .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
+                .blur(radius = 16.dp)
         )
-        Spacer(Modifier.height(8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 10.dp),
         ) {
-            labels.forEachIndexed { idx, label ->
-                StreakDay(
-                    label = label,
-                    isCompleted = days.getOrNull(idx) == true,
-                    isCurrent = idx == currentIndex,
-                )
+            Text(
+                text = "ТВОЯ СЕРИЯ",
+                color = TextPrimary,
+                fontSize = scaledSp(12),
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp,
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                labels.forEachIndexed { idx, label ->
+                    StreakDay(
+                        label = label,
+                        isCompleted = days.getOrNull(idx) == true,
+                        isCurrent = idx == currentIndex,
+                    )
+                }
             }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "$streakDays дней подряд! Продолжай!",
+                color = Accent,
+                fontSize = scaledSp(12),
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
         }
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = "$streakDays дней подряд! Продолжай!",
-            color = Accent,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-        )
     }
 }
 
@@ -512,7 +466,7 @@ private fun StreakDay(label: String, isCompleted: Boolean, isCurrent: Boolean) {
         Text(
             text = label,
             color = TextSecondary,
-            fontSize = 10.sp,
+            fontSize = scaledSp(10),
             fontWeight = FontWeight.SemiBold,
             letterSpacing = 0.5.sp,
         )
@@ -619,38 +573,32 @@ private fun StatItem(
     value: Int,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    Row(
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            MainIcon(
-                type = icon,
-                tint = TextSecondary,
-                modifier = Modifier.size(16.dp),
-            )
-            Spacer(Modifier.width(6.dp))
+        MainIcon(
+            type = icon,
+            tint = TextSecondary,
+            modifier = Modifier.size(18.dp),
+        )
+        Spacer(Modifier.width(8.dp))
+        Column {
             Text(
                 text = label,
                 color = TextSecondary,
-                fontSize = 10.sp,
+                fontSize = scaledSp(10),
                 letterSpacing = 1.sp,
                 fontWeight = FontWeight.SemiBold,
             )
+            Text(
+                text = value.toString(),
+                color = TextPrimary,
+                fontSize = scaledSp(16),
+                fontWeight = FontWeight.Bold,
+            )
         }
-
-        Spacer(Modifier.height(4.dp))
-
-        Text(
-            text = value.toString(),
-            color = TextPrimary,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-        )
     }
 }
 
@@ -732,7 +680,7 @@ private fun ActionTile(
         Text(
             text = label,
             color = TextPrimary,
-            fontSize = 10.sp,
+            fontSize = scaledSp(10),
             letterSpacing = 1.sp,
             fontWeight = FontWeight.SemiBold,
         )
@@ -775,8 +723,8 @@ private fun StartTrainingButton(onClick: () -> Unit) {
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFFE2E74A),
-                            Color(0xFFB0B232)
+                            ButtonGradientStart,
+                            ButtonGradientEnd
                         ),
                         start = Offset(0f, 0f),
                         end = Offset(0f, Float.POSITIVE_INFINITY)
@@ -792,7 +740,7 @@ private fun StartTrainingButton(onClick: () -> Unit) {
             Spacer(Modifier.width(10.dp))
             Text(
                 text = "НАЧАТЬ ТРЕНИРОВКУ",
-                fontSize = 15.sp,
+                fontSize = scaledSp(15),
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.5.sp,
             )
