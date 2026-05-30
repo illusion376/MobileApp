@@ -13,5 +13,8 @@
 
         <key>CFBundleDevelopmentRegion</key>
         <string>$(DEVELOPMENT_LANGUAGE)</string>
+
+        <key>NSMotionUsageDescription</key>
+        <string>Приложению нужен доступ к датчику движения для подсчёта шагов во время тренировки.</string>
     </dict>
 </plist>
