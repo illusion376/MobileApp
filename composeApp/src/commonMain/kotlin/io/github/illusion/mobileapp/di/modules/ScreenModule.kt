@@ -51,6 +51,6 @@ val screenModule = module {
     }
 
     factory {
-        TrainingViewModel(get(), get())
+        TrainingViewModel(get(), get(), get(), get())
     }
 }
