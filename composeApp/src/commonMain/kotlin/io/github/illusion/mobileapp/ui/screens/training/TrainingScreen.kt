@@ -33,7 +33,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,7 +44,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.illusion.mobileapp.domain.health.StepCounter
 import io.github.illusion.mobileapp.ui.screens.components.map.PlatformMapView
 import io.github.illusion.mobileapp.ui.screens.themes.scaledSp
 import org.koin.compose.koinInject
@@ -66,17 +64,8 @@ private val GlassBorder = Color(0xFFFFFFFF).copy(alpha = 0.10f)
 @Composable
 fun TrainingScreen(
     onBack: () -> Unit,
-    startService: (String) -> Unit = {},
+    viewModel: TrainingViewModel = koinInject(),
 ) {
-    val stepCounter = koinInject<StepCounter>()
-
-    val viewModel = remember {
-        TrainingViewModel(
-            stepCounter = stepCounter,
-            startService = startService,
-        )
-    }
-
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     Box(
