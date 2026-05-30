@@ -15,6 +15,7 @@ import io.github.illusion.mobileapp.domain.usecase.VerificationUserUseCase
 import io.github.illusion.mobileapp.ui.screens.login.LoginViewModel
 import io.github.illusion.mobileapp.ui.screens.main.MainViewModel
 import io.github.illusion.mobileapp.ui.screens.register.RegisterViewModel
+import io.github.illusion.mobileapp.ui.screens.training.TrainingViewModel
 import io.github.illusion.mobileapp.ui.screens.verification.VerificationViewModel
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -47,5 +48,9 @@ val screenModule = module {
 
     factory {
         MainViewModel(get(), get())
+    }
+
+    factory {
+        TrainingViewModel(get(), get())
     }
 }

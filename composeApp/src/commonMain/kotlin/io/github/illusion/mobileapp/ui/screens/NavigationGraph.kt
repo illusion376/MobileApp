@@ -20,7 +20,7 @@ sealed class Screen {
 }
 
 @Composable
-fun NavigationGraph(startService: (String) -> Unit) {
+fun NavigationGraph() {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Login) }
 
     when (currentScreen) {
@@ -54,7 +54,6 @@ fun NavigationGraph(startService: (String) -> Unit) {
         is Screen.Training -> {
             TrainingScreen(
                 onBack = { currentScreen = Screen.Main },
-                startService = startService
             )
         }
     }

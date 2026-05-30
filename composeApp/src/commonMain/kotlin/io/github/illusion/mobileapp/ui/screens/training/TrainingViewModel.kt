@@ -2,6 +2,7 @@ package io.github.illusion.mobileapp.ui.screens.training
 
 import androidx.lifecycle.ViewModel
 import io.github.illusion.mobileapp.domain.health.StepCounter
+import io.github.illusion.mobileapp.service.ServiceStarter
 import io.github.illusion.mobileapp.service.TrainingServiceActions
 import io.github.illusion.mobileapp.service.TrainingServiceBridge
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +14,7 @@ private const val STEP_LENGTH_KM = 0.00075
 
 class TrainingViewModel(
     private val stepCounter: StepCounter,
-    private val startService: (String) -> Unit,
+    private val serviceStarter: ServiceStarter,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TrainingUIState())
@@ -38,20 +39,20 @@ class TrainingViewModel(
         if (!_uiState.value.isRunning) return
         if (_uiState.value.isPaused) {
             _uiState.update { it.copy(isPaused = false) }
-            startService(TrainingServiceActions.ACTION_RESUME)
+            serviceStarter.start(TrainingServiceActions.ACTION_RESUME)
         } else {
             _uiState.update { it.copy(isPaused = true) }
-            startService(TrainingServiceActions.ACTION_PAUSE)
+            serviceStarter.start(TrainingServiceActions.ACTION_PAUSE)
         }
     }
 
     private fun startTraining() {
         _uiState.update { it.copy(isRunning = true, isPaused = false) }
-        startService(TrainingServiceActions.ACTION_START)
+        serviceStarter.start(TrainingServiceActions.ACTION_START)
     }
 
     private fun stopTraining() {
-        startService(TrainingServiceActions.ACTION_STOP)
+        serviceStarter.start(TrainingServiceActions.ACTION_STOP)
         _uiState.update { TrainingUIState() }
     }
 
