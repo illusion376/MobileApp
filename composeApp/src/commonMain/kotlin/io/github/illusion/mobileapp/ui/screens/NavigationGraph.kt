@@ -20,7 +20,7 @@ sealed class Screen {
 }
 
 @Composable
-fun NavigationGraph() {
+fun NavigationGraph(startService: (String) -> Unit) {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Login) }
 
     when (currentScreen) {
@@ -41,9 +41,7 @@ fun NavigationGraph() {
         is Screen.Verification -> {
             VerificationScreen(
                 email = (currentScreen as Screen.Verification).email,
-                onVerificationComplete = {
-                    currentScreen = Screen.Main
-                },
+                onVerificationComplete = { currentScreen = Screen.Main },
                 onBackToLogin = { currentScreen = Screen.Login }
             )
         }
@@ -55,7 +53,8 @@ fun NavigationGraph() {
         }
         is Screen.Training -> {
             TrainingScreen(
-                onBack = { currentScreen = Screen.Main }
+                onBack = { currentScreen = Screen.Main },
+                startService = startService
             )
         }
     }

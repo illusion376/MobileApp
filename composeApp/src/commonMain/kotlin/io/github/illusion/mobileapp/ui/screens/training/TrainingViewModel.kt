@@ -1,53 +1,58 @@
 package io.github.illusion.mobileapp.ui.screens.training
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import io.github.illusion.mobileapp.domain.health.StepCounter
+import io.github.illusion.mobileapp.service.TrainingServiceActions
+import io.github.illusion.mobileapp.service.TrainingServiceBridge
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
-class TrainingViewModel : ViewModel() {
+private const val STEP_LENGTH_KM = 0.00075
+
+class TrainingViewModel(
+    private val stepCounter: StepCounter,
+    private val startService: (String) -> Unit,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TrainingUIState())
     val uiState: StateFlow<TrainingUIState> = _uiState.asStateFlow()
 
-    private var timerJob: Job? = null
-
-    fun startTraining() {
-        if (_uiState.value.isRunning) return
-        _uiState.update { it.copy(isRunning = true, isPaused = false) }
-        startTimer()
-    }
-
-    fun togglePause() {
-        val current = _uiState.value
-        if (!current.isRunning) return
-        if (current.isPaused) {
-            _uiState.update { it.copy(isPaused = false) }
-            startTimer()
-        } else {
-            timerJob?.cancel()
-            _uiState.update { it.copy(isPaused = true) }
+    init {
+        TrainingServiceBridge.onStepsChanged = { steps ->
+            _uiState.update {
+                it.copy(steps = steps, distanceKm = steps * STEP_LENGTH_KM)
+            }
+        }
+        TrainingServiceBridge.onSecondsChanged = { seconds ->
+            _uiState.update { it.copy(durationSeconds = seconds) }
         }
     }
 
     fun toggleTraining() {
-        if (_uiState.value.isRunning) {
-            stopTraining()
+        if (_uiState.value.isRunning) stopTraining() else startTraining()
+    }
+
+    fun togglePause() {
+        if (!_uiState.value.isRunning) return
+        if (_uiState.value.isPaused) {
+            _uiState.update { it.copy(isPaused = false) }
+            startService(TrainingServiceActions.ACTION_RESUME)
         } else {
-            startTraining()
+            _uiState.update { it.copy(isPaused = true) }
+            startService(TrainingServiceActions.ACTION_PAUSE)
         }
     }
 
+    private fun startTraining() {
+        _uiState.update { it.copy(isRunning = true, isPaused = false) }
+        startService(TrainingServiceActions.ACTION_START)
+    }
+
     private fun stopTraining() {
-        timerJob?.cancel()
-        _uiState.update {
-            it.copy(isRunning = false, isPaused = false)
-        }
+        startService(TrainingServiceActions.ACTION_STOP)
+        _uiState.update { TrainingUIState() }
     }
 
     fun selectTab(tab: TrainingTab) {
@@ -56,11 +61,10 @@ class TrainingViewModel : ViewModel() {
 
     fun updateLocation(latitude: Double, longitude: Double) {
         _uiState.update { state ->
-            val newRoute = if (state.isRunning && !state.isPaused) {
+            val newRoute = if (state.isRunning && !state.isPaused)
                 state.routePoints + (latitude to longitude)
-            } else {
+            else
                 state.routePoints
-            }
             state.copy(
                 userLatitude = latitude,
                 userLongitude = longitude,
@@ -69,28 +73,9 @@ class TrainingViewModel : ViewModel() {
         }
     }
 
-    fun updateSteps(steps: Int) {
-        _uiState.update { it.copy(steps = steps) }
-    }
-
-    fun updateDistance(km: Double) {
-        _uiState.update { it.copy(distanceKm = km) }
-    }
-
-    private fun startTimer() {
-        timerJob?.cancel()
-        timerJob = viewModelScope.launch {
-            while (true) {
-                delay(1000)
-                if (!_uiState.value.isPaused) {
-                    _uiState.update { it.copy(durationSeconds = it.durationSeconds + 1) }
-                }
-            }
-        }
-    }
-
     override fun onCleared() {
         super.onCleared()
-        timerJob?.cancel()
+        TrainingServiceBridge.onStepsChanged = null
+        TrainingServiceBridge.onSecondsChanged = null
     }
 }
