@@ -38,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -47,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.illusion.mobileapp.ui.screens.components.map.PlatformMapView
 import io.github.illusion.mobileapp.ui.screens.themes.scaledSp
 import org.koin.compose.koinInject
+
 
 private val BgDark = Color(0xFF1B1B15)
 private val BgGradientTop = Color(0xFF333329)
@@ -65,6 +65,9 @@ private val GlassBorder = Color(0xFFFFFFFF).copy(alpha = 0.10f)
 fun TrainingScreen(
     onBack: () -> Unit,
     viewModel: TrainingViewModel = koinInject(),
+    onToggleTraining: () -> Unit = {},
+    onTogglePause: () -> Unit = {},
+    onTabSelected: (TrainingTab) -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -74,10 +77,135 @@ fun TrainingScreen(
             .background(BgDark),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            TopBar(onBack = onBack)
+            // 1. TopBar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Brush.verticalGradient(listOf(BgGradientTop, BgGradientBottom)))
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = onBack, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = TextPrimary,
+                    )
+                }
+                Text(
+                    text = "Тренировка",
+                    color = TextPrimary,
+                    fontSize = scaledSp(18),
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center,
+                )
+                IconButton(onClick = {}, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        imageVector = Icons.Filled.Settings,
+                        contentDescription = "Настройки",
+                        tint = TextPrimary,
+                    )
+                }
+            }
 
-            StatsBar(state = state)
+            // 2. Встроенный инлайн-баннер серии дней активности
+            if (state.showStreakBanner) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF26261F))
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "🔥",
+                            fontSize = 18.sp,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
 
+                        val preLastDigit = state.streakDays % 100 / 10
+                        val lastDigit = state.streakDays % 10
+                        val word = if (preLastDigit == 1) {
+                            "дней"
+                        } else {
+                            when (lastDigit) {
+                                1 -> "день"
+                                2, 3, 4 -> "дня"
+                                else -> "дней"
+                            }
+                        }
+
+                        Text(
+                            text = "Вы тренируетесь ${state.streakDays} $word подряд! Так держать!",
+                            color = Accent,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+
+            // 3. StatsBar
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(GlassColor)
+                        .blur(radius = 16.dp)
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 14.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = "KM", color = TextSecondary, fontSize = scaledSp(12))
+                        Text(
+                            text = state.distanceKm.formatKm(),
+                            color = TextPrimary,
+                            fontSize = scaledSp(28),
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .border(2.dp, StepCircleBorder, CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "${state.steps}",
+                                color = StepCircleBorder,
+                                fontSize = scaledSp(20),
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(text = "шагов", color = StepCircleBorder, fontSize = scaledSp(11))
+                        }
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        val timeText = "${state.durationMinutes}:${state.durationRemainderSeconds.toString().padStart(2, '0')}"
+                        Text(
+                            text = timeText,
+                            color = TextPrimary,
+                            fontSize = scaledSp(28),
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(text = "мин", color = TextSecondary, fontSize = scaledSp(12))
+                    }
+                }
+            }
+
+            // 4. Карта и кнопки действий на карте
             Box(modifier = Modifier.weight(1f)) {
                 PlatformMapView(
                     modifier = Modifier.fillMaxSize(),
@@ -93,270 +221,122 @@ fun TrainingScreen(
                         .padding(end = 12.dp, bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    MapActionButton(
-                        icon = Icons.Filled.MyLocation,
-                        onClick = {},
-                    )
-                    MapActionButton(
-                        icon = Icons.Filled.Layers,
-                        onClick = {},
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(MapButtonBg.copy(alpha = 0.85f))
+                            .clickable(onClick = {}),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(imageVector = Icons.Filled.MyLocation, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(22.dp))
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(MapButtonBg.copy(alpha = 0.85f))
+                            .clickable(onClick = {}),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(imageVector = Icons.Filled.Layers, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(22.dp))
+                    }
                 }
             }
         }
 
-        BottomSection(
-            state = state,
-            onToggleTraining = viewModel::toggleTraining,
-            onTogglePause = viewModel::togglePause,
-            onTabSelected = viewModel::selectTab,
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
-    }
-}
-
-@Composable
-private fun TopBar(onBack: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                Brush.verticalGradient(listOf(BgGradientTop, BgGradientBottom))
-            )
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(onClick = onBack, modifier = Modifier.size(32.dp)) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Назад",
-                tint = TextPrimary,
-            )
-        }
-
-        Text(
-            text = "Тренировка",
-            color = TextPrimary,
-            fontSize = scaledSp(18),
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.weight(1f),
-            textAlign = TextAlign.Center,
-        )
-
-        IconButton(onClick = {}, modifier = Modifier.size(32.dp)) {
-            Icon(
-                imageVector = Icons.Filled.Settings,
-                contentDescription = "Настройки",
-                tint = TextPrimary,
-            )
-        }
-    }
-}
-
-@Composable
-private fun StatsBar(state: TrainingUIState) {
-    Box(modifier = Modifier.fillMaxWidth()) {
+        // 5. BottomSection
+        val label = if (state.isRunning) "ЗАКОНЧИТЬ ТРЕНИРОВКУ" else "НАЧАТЬ ТРЕНИРОВКУ"
         Box(
             modifier = Modifier
-                .matchParentSize()
-                .background(GlassColor)
-                .blur(radius = 16.dp)
-        )
-
-        Row(
-            modifier = Modifier
+                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(start = 12.dp, end = 12.dp, bottom = 8.dp),
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "KM",
-                    color = TextSecondary,
-                    fontSize = scaledSp(12),
-                )
-                Text(
-                    text = state.distanceKm.formatKm(),
-                    color = TextPrimary,
-                    fontSize = scaledSp(28),
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-
             Box(
                 modifier = Modifier
-                    .size(72.dp)
-                    .border(2.dp, StepCircleBorder, CircleShape),
-                contentAlignment = Alignment.Center,
+                    .matchParentSize()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(GlassColor)
+                    .border(1.dp, GlassBorder, RoundedCornerShape(24.dp))
+                    .blur(radius = 16.dp)
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 8.dp),
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(Brush.horizontalGradient(listOf(Accent, AccentDim)))
+                        .clickable(onClick = onToggleTraining),
+                    contentAlignment = Alignment.Center,
+                ) {
                     Text(
-                        text = "${state.steps}",
-                        color = StepCircleBorder,
-                        fontSize = scaledSp(20),
+                        text = label,
+                        color = Color(0xFF1B1B15),
+                        fontSize = scaledSp(16),
                         fontWeight = FontWeight.Bold,
-                    )
-                    Text(
-                        text = "шагов",
-                        color = StepCircleBorder,
-                        fontSize = scaledSp(11),
+                        letterSpacing = 1.sp,
                     )
                 }
-            }
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                val timeText = "${state.durationMinutes}:${state.durationRemainderSeconds.toString().padStart(2, '0')}"
-                Text(
-                    text = timeText,
-                    color = TextPrimary,
-                    fontSize = scaledSp(28),
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = "мин",
-                    color = TextSecondary,
-                    fontSize = scaledSp(12),
-                )
-            }
-        }
-    }
-}
+                Spacer(Modifier.height(12.dp))
 
-@Composable
-private fun MapActionButton(
-    icon: ImageVector,
-    onClick: () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .size(44.dp)
-            .clip(CircleShape)
-            .background(MapButtonBg.copy(alpha = 0.85f))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = TextPrimary,
-            modifier = Modifier.size(22.dp),
-        )
-    }
-}
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                ) {
+                    // Пауза
+                    val pauseTint = if (state.selectedTab == TrainingTab.PAUSE) TextPrimary else TextDim
+                    Column(
+                        modifier = Modifier
+                            .clickable {
+                                onTogglePause()
+                                onTabSelected(TrainingTab.PAUSE)
+                            }
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Icon(imageVector = Icons.Filled.Pause, contentDescription = "Пауза", tint = pauseTint, modifier = Modifier.size(22.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = if (state.isPaused) "Продолжить" else "Пауза", color = pauseTint, fontSize = scaledSp(10))
+                    }
 
-@Composable
-private fun BottomSection(
-    state: TrainingUIState,
-    onToggleTraining: () -> Unit,
-    onTogglePause: () -> Unit,
-    onTabSelected: (TrainingTab) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val label = if (state.isRunning) "ЗАКОНЧИТЬ ТРЕНИРОВКУ" else "НАЧАТЬ ТРЕНИРОВКУ"
+                    // Местоположение
+                    val locTint = if (state.selectedTab == TrainingTab.LOCATION) TextPrimary else TextDim
+                    Column(
+                        modifier = Modifier
+                            .clickable { onTabSelected(TrainingTab.LOCATION) }
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Icon(imageVector = Icons.Filled.Place, contentDescription = "Местоположение", tint = locTint, modifier = Modifier.size(22.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = "Местоположение", color = locTint, fontSize = scaledSp(10))
+                    }
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(start = 12.dp, end = 12.dp, bottom = 8.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .clip(RoundedCornerShape(24.dp))
-                .background(GlassColor)
-                .border(1.dp, GlassBorder, RoundedCornerShape(24.dp))
-                .blur(radius = 16.dp)
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 8.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .clip(RoundedCornerShape(28.dp))
-                    .background(
-                        Brush.horizontalGradient(listOf(Accent, AccentDim))
-                    )
-                    .clickable(onClick = onToggleTraining),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = label,
-                    color = Color(0xFF1B1B15),
-                    fontSize = scaledSp(16),
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp,
-                )
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                BottomNavItem(
-                    icon = Icons.Filled.Pause,
-                    label = if (state.isPaused) "Продолжить" else "Пауза",
-                    isSelected = state.selectedTab == TrainingTab.PAUSE,
-                    onClick = {
-                        onTogglePause()
-                        onTabSelected(TrainingTab.PAUSE)
-                    },
-                )
-                BottomNavItem(
-                    icon = Icons.Filled.Place,
-                    label = "Местоположение",
-                    isSelected = state.selectedTab == TrainingTab.LOCATION,
-                    onClick = { onTabSelected(TrainingTab.LOCATION) },
-                )
-                BottomNavItem(
-                    icon = Icons.Filled.BarChart,
-                    label = "Статистика",
-                    isSelected = state.selectedTab == TrainingTab.STATISTICS,
-                    onClick = { onTabSelected(TrainingTab.STATISTICS) },
-                )
+                    // Статистика
+                    val statTint = if (state.selectedTab == TrainingTab.STATISTICS) TextPrimary else TextDim
+                    Column(
+                        modifier = Modifier
+                            .clickable { onTabSelected(TrainingTab.STATISTICS) }
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Icon(imageVector = Icons.Filled.BarChart, contentDescription = "Статистика", tint = statTint, modifier = Modifier.size(22.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = "Статистика", color = statTint, fontSize = scaledSp(10))
+                    }
+                }
             }
         }
-    }
-}
-
-@Composable
-private fun BottomNavItem(
-    icon: ImageVector,
-    label: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-) {
-    val tint = if (isSelected) TextPrimary else TextDim
-
-    Column(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = tint,
-            modifier = Modifier.size(22.dp),
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = label,
-            color = tint,
-            fontSize = scaledSp(10),
-        )
     }
 }
 

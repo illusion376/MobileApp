@@ -13,9 +13,13 @@ data class TrainingUIState(
     val userLongitude: Double = 37.6173,
     val routePoints: List<Pair<Double, Double>> = emptyList(),
     val selectedTab: TrainingTab = TrainingTab.LOCATION,
+    val streakDays: Int = 0
 ) {
     val durationMinutes: Int get() = durationSeconds / 60
     val durationRemainderSeconds: Int get() = durationSeconds % 60
+
+    // Вспомогательное свойство: показывать плашку, только если серия больше 0 дней
+    val showStreakBanner: Boolean get() = streakDays > 0
 }
 
 enum class TrainingTab {
