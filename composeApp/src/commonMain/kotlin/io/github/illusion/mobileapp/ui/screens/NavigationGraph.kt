@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import io.github.illusion.mobileapp.ui.screens.login.LoginScreen
 import io.github.illusion.mobileapp.ui.screens.main.MainScreen
 import io.github.illusion.mobileapp.ui.screens.register.RegisterScreen
+import io.github.illusion.mobileapp.ui.screens.quests.QuestsScreen
 import io.github.illusion.mobileapp.ui.screens.training.TrainingScreen
 import io.github.illusion.mobileapp.ui.screens.verification.VerificationScreen
 
@@ -17,6 +18,7 @@ sealed class Screen {
     data class Verification(val email: String) : Screen()
     object Main : Screen()
     object Training : Screen()
+    object Quests : Screen()
 }
 
 @Composable
@@ -48,11 +50,17 @@ fun NavigationGraph() {
         is Screen.Main -> {
             MainScreen(
                 onLogout = { currentScreen = Screen.Login },
-                onStartTraining = { currentScreen = Screen.Training }
+                onStartTraining = { currentScreen = Screen.Training },
+                onNavigateToQuests = { currentScreen = Screen.Quests },
             )
         }
         is Screen.Training -> {
             TrainingScreen(
+                onBack = { currentScreen = Screen.Main },
+            )
+        }
+        is Screen.Quests -> {
+            QuestsScreen(
                 onBack = { currentScreen = Screen.Main },
             )
         }

@@ -69,6 +69,7 @@ private val GlassBorder = Color(0xFFFFFFFF).copy(alpha = 0.12f)
 fun MainScreen(
     onLogout: () -> Unit,
     onStartTraining: () -> Unit = {},
+    onNavigateToQuests: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: MainViewModel = koinInject(),
 ) {
@@ -80,7 +81,7 @@ fun MainScreen(
         onRefresh = viewModel::loadCharacter,
         onDismissError = viewModel::dismissError,
         onInventoryClick = viewModel::onInventoryClick,
-        onQuestsClick = viewModel::onQuestsClick,
+        onQuestsClick = onNavigateToQuests,
         onBossesClick = viewModel::onBossesClick,
         onStartTrainingClick = onStartTraining,
         onLogoutClick = logout,
