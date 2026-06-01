@@ -6,7 +6,9 @@
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
             android:allowBackup="true"
@@ -26,11 +28,14 @@
             </intent-filter>
         </activity>
 
-        <!-- Foreground Service для фоновой тренировки -->
         <service
                 android:name=".service.TrainingService"
-                android:foregroundServiceType="health"
-                android:exported="false"/>
+                android:foregroundServiceType="specialUse"
+                android:exported="false">
+            <property
+                    android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                    android:value="fitness_training_with_steps_and_route"/>
+        </service>
 
     </application>
 </manifest>
