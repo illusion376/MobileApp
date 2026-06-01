@@ -309,7 +309,7 @@ private fun DisciplineCard(
             MainIcon(
                 type = MainIconType.Emblem,
                 tint = Accent,
-                modifier = Modifier.size(140.dp),
+                modifier = Modifier.size(200.dp),
             )
             Spacer(Modifier.height(10.dp))
             Text(

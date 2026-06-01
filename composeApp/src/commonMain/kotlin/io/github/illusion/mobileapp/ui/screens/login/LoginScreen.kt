@@ -32,13 +32,16 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.Image
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.unit.sp
 import io.github.illusion.mobileapp.ui.screens.themes.scaledSp
 import io.github.illusion.mobileapp.resources.Res
+import io.github.illusion.mobileapp.resources.ic_emblem
 import io.github.illusion.mobileapp.resources.ic_lock
+import io.github.illusion.mobileapp.resources.ic_logo
 import io.github.illusion.mobileapp.resources.ic_user
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -97,11 +100,12 @@ fun LoginContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(bottom = 40.dp),
-        verticalArrangement = Arrangement.Bottom
     ) {
+        Spacer(modifier = Modifier.weight(0.35f))
+
         TopSection()
 
-        Spacer(modifier = Modifier.height(45.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         InputsSection(
             uiState = uiState,
@@ -111,24 +115,27 @@ fun LoginContent(
             onLoginClick = onLoginClick
         )
 
-        Spacer(modifier = Modifier.height(45.dp))
+        Spacer(modifier = Modifier.weight(0.65f))
 
         BottomSection(
-            onRegisterClick = onNavigateToRegister  // ← ПЕРЕДАЕМ В BottomSection
+            onRegisterClick = onNavigateToRegister
         )
     }
 }
 
 @Composable
 fun TopSection() {
-    Column {
-        Text(
-            text = "LOGO",
-            color = Color(0xFFDBDBDB),
-            style = MaterialTheme.typography.headlineLarge
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Image(
+            painter = painterResource(Res.drawable.ic_logo),
+            contentDescription = "Logo",
+            modifier = Modifier.size(240.dp),
         )
 
-        Spacer(modifier = Modifier.height(5.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
             text = "Движение вперёд с осознанием ответственности перед людьми и природой.",

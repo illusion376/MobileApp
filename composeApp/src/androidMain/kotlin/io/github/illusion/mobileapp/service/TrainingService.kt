@@ -72,8 +72,6 @@ class TrainingService : Service() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "startForeground failed: ${e.message}", e)
-            stopSelf()
-            return
         }
         startStepCounting()
         startTimer()

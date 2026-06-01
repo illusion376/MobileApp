@@ -1,5 +1,8 @@
 ﻿package io.github.illusion.mobileapp.ui.screens.components.map
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
@@ -10,6 +13,28 @@ import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.geometry.Polyline
 import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.mapview.MapView
+import com.yandex.runtime.image.ImageProvider
+
+private val ROUTE_COLOR = 0xFFE2D566.toInt()
+private const val ROUTE_WIDTH = 5f
+private const val USER_DOT_SIZE = 36
+private val USER_DOT_COLOR = 0xFFE2D566.toInt()
+private val USER_DOT_BORDER_COLOR = 0xFF1B1B15.toInt()
+
+private fun createUserDotBitmap(): Bitmap {
+    val bmp = Bitmap.createBitmap(USER_DOT_SIZE, USER_DOT_SIZE, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bmp)
+    val center = USER_DOT_SIZE / 2f
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    // Outer dark ring
+    paint.color = USER_DOT_BORDER_COLOR
+    paint.style = Paint.Style.FILL
+    canvas.drawCircle(center, center, center, paint)
+    // Inner yellow dot
+    paint.color = USER_DOT_COLOR
+    canvas.drawCircle(center, center, center - 4f, paint)
+    return bmp
+}
 
 @Composable
 actual fun PlatformMapView(
@@ -25,9 +50,13 @@ actual fun PlatformMapView(
             onStart()
             mapWindow.map.isNightModeEnabled = true
             mapWindow.map.move(
-                CameraPosition(Point(userLatitude, userLongitude), 15.0f, 0.0f, 0.0f)
+                CameraPosition(Point(userLatitude, userLongitude), 16.0f, 0.0f, 0.0f)
             )
         }
+    }
+
+    val userDotImage = remember {
+        ImageProvider.fromBitmap(createUserDotBitmap())
     }
 
     DisposableEffect(Unit) {
@@ -51,11 +80,11 @@ actual fun PlatformMapView(
             if (routePoints.size >= 2) {
                 val points = routePoints.map { Point(it.first, it.second) }
                 val polyline = map.mapObjects.addPolyline(Polyline(points))
-                polyline.setStrokeColor(0xFFE2D566.toInt())
-                polyline.setStrokeWidth(4f)
+                polyline.setStrokeColor(ROUTE_COLOR)
+                polyline.setStrokeWidth(ROUTE_WIDTH)
             }
 
-            map.mapObjects.addPlacemark(target)
+            map.mapObjects.addPlacemark(target, userDotImage)
         },
         modifier = modifier,
     )
