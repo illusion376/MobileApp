@@ -5,8 +5,12 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
 import io.github.illusion.mobileapp.MainActivity
 import io.github.illusion.mobileapp.domain.health.StepCounter
 import kotlinx.coroutines.CoroutineScope
@@ -33,6 +37,7 @@ class TrainingService : Service() {
     companion object {
         const val CHANNEL_ID = "training_channel"
         const val NOTIFICATION_ID = 1
+        private const val TAG = "TrainingService"
     }
 
     override fun onCreate() {
@@ -54,7 +59,22 @@ class TrainingService : Service() {
         currentSteps = 0
         currentSeconds = 0
         stepsOffset = 0
-        startForeground(NOTIFICATION_ID, buildNotification(0, 0))
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                ServiceCompat.startForeground(
+                    this,
+                    NOTIFICATION_ID,
+                    buildNotification(0, 0),
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
+                )
+            } else {
+                startForeground(NOTIFICATION_ID, buildNotification(0, 0))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "startForeground failed: ${e.message}", e)
+            stopSelf()
+            return
+        }
         startStepCounting()
         startTimer()
     }

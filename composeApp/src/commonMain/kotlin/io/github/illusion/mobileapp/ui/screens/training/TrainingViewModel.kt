@@ -45,7 +45,7 @@ class TrainingViewModel(
     private fun startLocationUpdates() {
         locationJob = viewModelScope.launch {
             locationProvider.startUpdates()
-                .catch { /* permission denied or provider unavailable */ }
+                .catch { }
                 .collect { (lat, lng) ->
                     _uiState.update { state ->
                         val newRoute = if (state.isRunning && !state.isPaused)
@@ -78,8 +78,10 @@ class TrainingViewModel(
     }
 
     private fun startTraining() {
-        hapticFeedback.performPaymentImpact()
-        _uiState.update { it.copy(isRunning = true, isPaused = false) }
+        try {
+            hapticFeedback.performPaymentImpact()
+        } catch (_: Exception) { }
+        _uiState.update { it.copy(isRunning = true, isPaused = false, routePoints = emptyList()) }
         serviceStarter.start(TrainingServiceActions.ACTION_START)
     }
 
