@@ -20,6 +20,6 @@ class TrainingApi(private val httpClient: HttpClient, private val kSafeRepositor
         return httpClient.post("${HttpString.URL}/training/finish/$userId") {
             header(HttpHeaders.Authorization, "Bearer $token")
             setBody(trainingRequestDTO)
-        }.body()
+        }.body<TrainingResponceDTO>()
     }
 }
