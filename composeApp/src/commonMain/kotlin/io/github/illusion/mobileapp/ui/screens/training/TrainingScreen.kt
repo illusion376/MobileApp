@@ -33,6 +33,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -67,6 +70,7 @@ fun TrainingScreen(
     viewModel: TrainingViewModel = koinInject(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var recenterTrigger by remember { mutableIntStateOf(0) }
 
     Box(
         modifier = Modifier
@@ -84,7 +88,7 @@ fun TrainingScreen(
                     userLatitude = state.userLatitude,
                     userLongitude = state.userLongitude,
                     routePoints = state.routePoints,
-                    onMyLocationClick = {},
+                    recenterTrigger = recenterTrigger,
                 )
 
                 Column(
@@ -95,7 +99,7 @@ fun TrainingScreen(
                 ) {
                     MapActionButton(
                         icon = Icons.Filled.MyLocation,
-                        onClick = {},
+                        onClick = { recenterTrigger++ },
                     )
                     MapActionButton(
                         icon = Icons.Filled.Layers,
@@ -112,6 +116,16 @@ fun TrainingScreen(
             onTabSelected = viewModel::selectTab,
             modifier = Modifier.align(Alignment.BottomCenter),
         )
+
+        state.completion?.let { result ->
+            TrainingCompletionDialog(
+                result = result,
+                onConfirm = {
+                    viewModel.dismissCompletion()
+                    onBack()
+                },
+            )
+        }
     }
 }
 
@@ -134,7 +148,6 @@ private fun TopBar(onBack: () -> Unit) {
                 tint = TextPrimary,
             )
         }
-
         Text(
             text = "Тренировка",
             color = TextPrimary,
@@ -143,7 +156,6 @@ private fun TopBar(onBack: () -> Unit) {
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Center,
         )
-
         IconButton(onClick = {}, modifier = Modifier.size(32.dp)) {
             Icon(
                 imageVector = Icons.Filled.Settings,
@@ -163,7 +175,6 @@ private fun StatsBar(state: TrainingUIState) {
                 .background(GlassColor)
                 .blur(radius = 16.dp)
         )
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -255,7 +266,6 @@ private fun BottomSection(
     modifier: Modifier = Modifier,
 ) {
     val label = if (state.isRunning) "ЗАКОНЧИТЬ ТРЕНИРОВКУ" else "НАЧАТЬ ТРЕНИРОВКУ"
-
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -269,7 +279,6 @@ private fun BottomSection(
                 .border(1.dp, GlassBorder, RoundedCornerShape(24.dp))
                 .blur(radius = 16.dp)
         )
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -338,7 +347,6 @@ private fun BottomNavItem(
     onClick: () -> Unit,
 ) {
     val tint = if (isSelected) TextPrimary else TextDim
-
     Column(
         modifier = Modifier
             .clickable(onClick = onClick)

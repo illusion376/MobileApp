@@ -9,5 +9,5 @@ expect fun PlatformMapView(
     userLatitude: Double,
     userLongitude: Double,
     routePoints: List<Pair<Double, Double>>,
-    onMyLocationClick: () -> Unit,
+    recenterTrigger: Int,
 )

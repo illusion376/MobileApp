@@ -5,10 +5,12 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import com.yandex.mapkit.Animation
 import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.geometry.Polyline
 import com.yandex.mapkit.map.CameraPosition
@@ -42,7 +44,7 @@ actual fun PlatformMapView(
     userLatitude: Double,
     userLongitude: Double,
     routePoints: List<Pair<Double, Double>>,
-    onMyLocationClick: () -> Unit,
+    recenterTrigger: Int,
 ) {
     val context = LocalContext.current
     val mapView = remember {
@@ -65,15 +67,21 @@ actual fun PlatformMapView(
         }
     }
 
+    LaunchedEffect(recenterTrigger) {
+        if (recenterTrigger > 0 && (userLatitude != 0.0 || userLongitude != 0.0)) {
+            mapView.mapWindow.map.move(
+                CameraPosition(Point(userLatitude, userLongitude), 16.0f, 0.0f, 0.0f),
+                Animation(Animation.Type.SMOOTH, 0.5f),
+                null,
+            )
+        }
+    }
+
     AndroidView(
         factory = { mapView },
         update = { view ->
             val map = view.mapWindow.map
             val target = Point(userLatitude, userLongitude)
-
-            map.move(
-                CameraPosition(target, map.cameraPosition.zoom.coerceAtLeast(15.0f), 0.0f, 0.0f)
-            )
 
             map.mapObjects.clear()
 

@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import io.github.illusion.mobileapp.domain.haptic.HapticFeedback
 import io.github.illusion.mobileapp.domain.health.StepCounter
 import io.github.illusion.mobileapp.domain.location.LocationProvider
+import io.github.illusion.mobileapp.domain.repository.KSafeRepository
 import io.github.illusion.mobileapp.domain.usecase.FinishTrainingUseCase
+import io.github.illusion.mobileapp.domain.usecase.GetCharacterUseCase
 import io.github.illusion.mobileapp.service.ServiceStarter
 import io.github.illusion.mobileapp.service.TrainingServiceActions
 import io.github.illusion.mobileapp.service.TrainingServiceBridge
@@ -25,6 +27,8 @@ class TrainingViewModel(
     private val locationProvider: LocationProvider,
     private val hapticFeedback: HapticFeedback,
     private val finishUseCase: FinishTrainingUseCase,
+    private val getCharacterUseCase: GetCharacterUseCase,   // ← новое
+    private val kSafeRepository: KSafeRepository,           // ← новое
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TrainingUIState())
@@ -93,13 +97,38 @@ class TrainingViewModel(
 
         val state = _uiState.value
 
-        finishUseCase(
+        val gainedXp = finishUseCase(
             state.steps,
             state.distanceKm,
-            state.durationMinutes
-        )
+            state.durationMinutes,
+        ).getOrNull()?.experience ?: 0
 
-        _uiState.update { TrainingUIState() }
+        val player = kSafeRepository.getDataOrNull("userId")
+            ?.let { getCharacterUseCase(it).getOrNull() }
+
+        val completion = if (player != null) {
+            TrainingResult(
+                gainedXp = gainedXp,
+                level = player.level,
+                nextLevel = player.level + 1,
+                currentXp = player.experience,
+                xpToNextLevel = player.experienceToNextLevel,
+            )
+        } else {
+            TrainingResult(
+                gainedXp = gainedXp,
+                level = 0,
+                nextLevel = 0,
+                currentXp = 0,
+                xpToNextLevel = 0,
+            )
+        }
+
+        _uiState.update { TrainingUIState(completion = completion) }
+    }
+
+    fun dismissCompletion() {
+        _uiState.update { it.copy(completion = null) }
     }
 
     fun selectTab(tab: TrainingTab) {

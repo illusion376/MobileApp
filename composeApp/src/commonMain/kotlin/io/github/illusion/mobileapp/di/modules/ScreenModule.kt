@@ -2,13 +2,17 @@
 
 import io.github.illusion.mobileapp.data.remote.api.PlayerApi
 import io.github.illusion.mobileapp.data.remote.api.QuestApi
+import io.github.illusion.mobileapp.data.remote.api.TrainingApi
 import io.github.illusion.mobileapp.data.remote.api.UserApi
 import io.github.illusion.mobileapp.data.repository.AuthRepositoryImpl
 import io.github.illusion.mobileapp.data.repository.PlayerRepositoryImpl
 import io.github.illusion.mobileapp.data.repository.KSafeRepositoryImpl
+import io.github.illusion.mobileapp.data.repository.TrainingRepositoryImpl
 import io.github.illusion.mobileapp.domain.repository.AuthRepository
 import io.github.illusion.mobileapp.domain.repository.PlayerRepository
 import io.github.illusion.mobileapp.domain.repository.KSafeRepository
+import io.github.illusion.mobileapp.domain.repository.TrainingRepository
+import io.github.illusion.mobileapp.domain.usecase.FinishTrainingUseCase
 import io.github.illusion.mobileapp.domain.usecase.GetCharacterUseCase
 import io.github.illusion.mobileapp.domain.usecase.LoginUserUseCase
 import io.github.illusion.mobileapp.domain.usecase.RegisterUserUseCase
@@ -28,14 +32,17 @@ val screenModule = module {
     singleOf(::UserApi)
     singleOf(::PlayerApi)
     singleOf(::QuestApi)
+    singleOf(::TrainingApi )
 
     singleOf(::AuthRepositoryImpl) bind AuthRepository::class
     singleOf(::PlayerRepositoryImpl) bind PlayerRepository::class
+    singleOf(::TrainingRepositoryImpl) bind TrainingRepository::class
 
     factoryOf(::LoginUserUseCase)
     factoryOf(::RegisterUserUseCase)
     factoryOf(::VerificationUserUseCase)
     factoryOf(::GetCharacterUseCase)
+    factoryOf(::FinishTrainingUseCase)
 
     factory {
         LoginViewModel(get(), get())
@@ -54,7 +61,7 @@ val screenModule = module {
     }
 
     factory {
-        TrainingViewModel(get(), get(), get(), get())
+        TrainingViewModel(get(), get(), get(), get(), get(), get(), get())
     }
 
     factory {
