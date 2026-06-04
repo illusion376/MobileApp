@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import io.github.illusion.mobileapp.domain.haptic.HapticFeedback
 import io.github.illusion.mobileapp.domain.health.StepCounter
 import io.github.illusion.mobileapp.domain.location.LocationProvider
+import io.github.illusion.mobileapp.domain.usecase.FinishTrainingUseCase
 import io.github.illusion.mobileapp.service.ServiceStarter
 import io.github.illusion.mobileapp.service.TrainingServiceActions
 import io.github.illusion.mobileapp.service.TrainingServiceBridge
@@ -23,6 +24,7 @@ class TrainingViewModel(
     private val serviceStarter: ServiceStarter,
     private val locationProvider: LocationProvider,
     private val hapticFeedback: HapticFeedback,
+    private val finishUseCase: FinishTrainingUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TrainingUIState())
@@ -80,13 +82,23 @@ class TrainingViewModel(
     private fun startTraining() {
         try {
             hapticFeedback.performPaymentImpact()
-        } catch (_: Exception) { }
+        } catch (_: Exception) {
+        }
         _uiState.update { it.copy(isRunning = true, isPaused = false, routePoints = emptyList()) }
         serviceStarter.start(TrainingServiceActions.ACTION_START)
     }
 
-    private fun stopTraining() {
+    private fun stopTraining() = viewModelScope.launch {
         serviceStarter.start(TrainingServiceActions.ACTION_STOP)
+
+        val state = _uiState.value
+
+        finishUseCase(
+            state.steps,
+            state.distanceKm,
+            state.durationMinutes
+        )
+
         _uiState.update { TrainingUIState() }
     }
 
