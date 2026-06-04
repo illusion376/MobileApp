@@ -119,6 +119,36 @@ object ExplorerQuest : QuestDefinition(
         (player.steps / 1300f).coerceAtMost(target)
 }
 
+object MarathonQuest : QuestDefinition(
+    id = "marathon",
+    title = "МАРАФОНЕЦ",
+    description = "Пройди 50 км за месяц",
+    iconType = QuestIconType.TARGET,
+    target = 50f,
+    unit = "км",
+    rewardXp = 500,
+) {
+    override fun computeCurrent(player: Player): Float =
+        (player.steps / 1300f).coerceAtMost(target)
+}
+
+object IronWillQuest : QuestDefinition(
+    id = "iron_will",
+    title = "ЖЕЛЕЗНАЯ ВОЛЯ",
+    description = "Тренируйся 7 дней подряд",
+    iconType = QuestIconType.FIRE,
+    target = 7f,
+    rewardXp = 300,
+    isStreak = true,
+    streakTarget = 7,
+) {
+    override fun computeCurrent(player: Player): Float =
+        player.streakDays.toFloat().coerceAtMost(target)
+
+    override fun computeStreakDays(player: Player): Int =
+        player.streakDays.coerceAtMost(streakTarget)
+}
+
 // ──────────────────────────────────────────────────────────────
 // Список всех квестов — добавь свой объект сюда
 // ──────────────────────────────────────────────────────────────
@@ -129,5 +159,7 @@ object QuestRegistry {
         DayStreakQuest,
         DisciplineQuest,
         ExplorerQuest,
+        MarathonQuest,
+        IronWillQuest
     )
 }

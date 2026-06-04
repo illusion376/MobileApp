@@ -42,27 +42,45 @@ class QuestsViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             val userId = kSafeRepository.getDataOrNull("userId") ?: "guest"
-            try {
-                val dtos = questApi.getQuests(userId)
-                val quests = dtos.map { it.toQuestItem() }
-                val completed = quests.count { it.isActive && it.isCompleted }
-                _uiState.update {
-                    it.copy(
-                        quests = quests,
-                        weeklyGoal = WeeklyGoal(
-                            completedQuests = completed.coerceAtMost(5),
-                            totalQuests = 5,
-                            bonusXp = 500,
-                        ),
-                        isLoading = false,
-                    )
-                }
+
+            val quests = try {
+                questApi.getQuests(userId).map { it.toQuestItem() }
             } catch (_: Exception) {
-                _uiState.update { it.copy(isLoading = false) }
+                emptyList()
+            }.ifEmpty {
+                QuestRegistry.ALL.map { it.toAvailableQuestItem() }
+            }
+
+            val completed = quests.count { it.isActive && it.isCompleted }
+            _uiState.update {
+                it.copy(
+                    quests = quests,
+                    weeklyGoal = WeeklyGoal(
+                        completedQuests = completed.coerceAtMost(5),
+                        totalQuests = 5,
+                        bonusXp = 500,
+                    ),
+                    isLoading = false,
+                )
             }
         }
     }
 
+    private fun QuestDefinition.toAvailableQuestItem(): QuestItem = QuestItem(
+        id = id,
+        title = title,
+        description = description,
+        iconType = iconType,
+        current = 0f,
+        target = target,
+        unit = unit,
+        rewardXp = rewardXp,
+        isActive = false,
+        isCompleted = false,
+        isStreak = isStreak,
+        streakDays = 0,
+        streakTarget = streakTarget,
+    )
     private fun QuestDTO.toQuestItem(): QuestItem {
         val iconType = when (this.iconType) {
             "BOOT" -> QuestIconType.BOOT
