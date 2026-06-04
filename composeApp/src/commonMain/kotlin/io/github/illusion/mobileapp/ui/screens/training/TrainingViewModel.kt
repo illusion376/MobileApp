@@ -27,8 +27,8 @@ class TrainingViewModel(
     private val locationProvider: LocationProvider,
     private val hapticFeedback: HapticFeedback,
     private val finishUseCase: FinishTrainingUseCase,
-    private val getCharacterUseCase: GetCharacterUseCase,   // ← новое
-    private val kSafeRepository: KSafeRepository,           // ← новое
+    private val getCharacterUseCase: GetCharacterUseCase,
+    private val kSafeRepository: KSafeRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TrainingUIState())
