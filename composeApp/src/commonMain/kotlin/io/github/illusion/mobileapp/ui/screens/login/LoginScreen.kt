@@ -36,6 +36,7 @@ import androidx.compose.foundation.Image
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.sp
 import io.github.illusion.mobileapp.ui.screens.themes.scaledSp
 import io.github.illusion.mobileapp.resources.Res
@@ -43,6 +44,7 @@ import io.github.illusion.mobileapp.resources.ic_emblem
 import io.github.illusion.mobileapp.resources.ic_lock
 import io.github.illusion.mobileapp.resources.ic_logo
 import io.github.illusion.mobileapp.resources.ic_user
+import io.github.illusion.mobileapp.resources.login_background
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -53,37 +55,48 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF333329),
-                        Color(0xFF1E1E18)
-                    )
-                )
-            )
-            .padding(horizontal = 41.dp)
-    ) {
-        LoginContent(
-            uiState = uiState,
-            onLoginChange = viewModel::updateLogin,
-            onPasswordChange = viewModel::updatePassword,
-            onRememberMeChange = viewModel::updateRememberMe,
-            onLoginClick = {
-                viewModel.onLoginClick(
-                    onSuccess = onNavigateToMain
-                )
-            },
-            onNavigateToRegister = onNavigateToRegister
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        Image(
+            painter = painterResource(Res.drawable.login_background),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
         )
 
-        // Выплывающее уведомление об ошибке
-        ErrorBanner(
-            errorMessage = uiState.errorMessage,
-            onDismiss = { viewModel.clearError() }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0x00000000),
+                            Color(0x33000000),
+                            Color(0xCC0D0D0A)
+                        )
+                    )
+                )
         )
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 41.dp)
+        ) {
+            LoginContent(
+                uiState = uiState,
+                onLoginChange = viewModel::updateLogin,
+                onPasswordChange = viewModel::updatePassword,
+                onRememberMeChange = viewModel::updateRememberMe,
+                onLoginClick = { viewModel.onLoginClick(onSuccess = onNavigateToMain) },
+                onNavigateToRegister = onNavigateToRegister
+            )
+
+            ErrorBanner(
+                errorMessage = uiState.errorMessage,
+                onDismiss = { viewModel.clearError() }
+            )
+        }
     }
 }
 

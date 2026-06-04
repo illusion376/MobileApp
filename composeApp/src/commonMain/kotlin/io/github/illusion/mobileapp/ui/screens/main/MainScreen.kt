@@ -623,7 +623,6 @@ private fun ActionsRow(
                 .blur(radius = 16.dp)
         )
 
-        // Слой 2: Четкие интерактивные кнопки поверх размытия
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -637,7 +636,7 @@ private fun ActionsRow(
                 modifier = Modifier.weight(1f),
             )
 
-            ColumnDivider(height = 24.dp) // Уменьшили высоту разделителя до 24.dp для аккуратного вида
+            ColumnDivider(height = 24.dp)
 
             ActionTile(
                 label = "КВЕСТЫ",

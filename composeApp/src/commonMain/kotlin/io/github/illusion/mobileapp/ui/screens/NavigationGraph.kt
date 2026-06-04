@@ -5,12 +5,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import io.github.illusion.mobileapp.domain.repository.KSafeRepository
 import io.github.illusion.mobileapp.ui.screens.login.LoginScreen
 import io.github.illusion.mobileapp.ui.screens.main.MainScreen
 import io.github.illusion.mobileapp.ui.screens.register.RegisterScreen
 import io.github.illusion.mobileapp.ui.screens.quests.QuestsScreen
 import io.github.illusion.mobileapp.ui.screens.training.TrainingScreen
 import io.github.illusion.mobileapp.ui.screens.verification.VerificationScreen
+import org.koin.compose.koinInject
 
 sealed class Screen {
     object Login : Screen()
@@ -23,7 +25,15 @@ sealed class Screen {
 
 @Composable
 fun NavigationGraph() {
-    var currentScreen by remember { mutableStateOf<Screen>(Screen.Login) }
+    val kSafe: KSafeRepository = koinInject()
+
+    val startScreen = remember {
+        val rememberMe = kSafe.getDataOrNull("remember_me") == "true"
+        val token = kSafe.getDataOrNull("token")
+        if (rememberMe && !token.isNullOrBlank()) Screen.Main else Screen.Login
+    }
+
+    var currentScreen by remember { mutableStateOf<Screen>(startScreen) }
 
     when (currentScreen) {
         is Screen.Login -> {
@@ -49,7 +59,12 @@ fun NavigationGraph() {
         }
         is Screen.Main -> {
             MainScreen(
-                onLogout = { currentScreen = Screen.Login },
+                onLogout = {
+                    kSafe.saveData("remember_me", "false")
+                    kSafe.saveData("token", "")
+                    kSafe.saveData("userId", "")
+                    currentScreen = Screen.Login
+                },
                 onStartTraining = { currentScreen = Screen.Training },
                 onNavigateToQuests = { currentScreen = Screen.Quests },
             )
