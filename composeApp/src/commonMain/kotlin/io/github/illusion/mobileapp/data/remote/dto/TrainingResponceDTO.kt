@@ -3,6 +3,6 @@
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TrainingResponceDTO(
+data class TrainingResponseDTO(
     val experience: Int
 )
